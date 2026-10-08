@@ -66,6 +66,12 @@ button { color: inherit; }
 .status-message.error { color: #ff9baf; }
 .error-detail { margin: 8px 0 0; padding: 10px; overflow-wrap: anywhere; white-space: pre-wrap; border: 1px solid rgba(255,155,175,.2); border-radius: 8px; color: #ffb5c1; background: rgba(90,17,42,.16); font-size: 11px; }
 .quick-section { margin-top: 25px; padding-top: 21px; border-top: 1px solid var(--line); }
+.preset-picker { display: grid; gap: 9px; margin-top: 18px; }
+.preset-picker select { width: 100%; min-height: 46px; padding: 0 13px; border: 1px solid rgba(166,181,218,.23); border-radius: 10px; color: var(--text); background: #10172a; font: inherit; font-size: 12px; outline: 0; }
+.preset-picker select:focus { border-color: rgba(154,139,255,.82); box-shadow: 0 0 0 3px rgba(139,124,255,.12); }
+.preset-picker optgroup { color: var(--accent-bright); background: #10172a; }
+.preset-picker option { color: var(--text); background: #10172a; }
+.preset-help { margin: 0; color: var(--subtle); font-size: 10px; line-height: 1.5; }
 .section-label { color: var(--subtle); font-size: 9px; font-weight: 850; letter-spacing: .15em; }
 .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
 .quick-link { min-height: 43px; padding: 0 13px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 11px; background: rgba(10,15,27,.62); color: #d2daee; font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }

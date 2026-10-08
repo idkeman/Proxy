@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="Connect to your own self-hosted Ultraviolet web workspace.">
+  <title>Proxy — Connect to your workspace</title>
+  <link rel="stylesheet" href="./public/styles.css">
+</head>
+<body>
+  <div class="site-shell portal-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Proxy home">
+        <span class="brand-mark">P<span>.</span></span>
+        <span class="brand-copy"><strong>PROXY</strong><span>WEB WORKSPACE</span></span>
+      </a>
+      <div class="connection-pill"><span class="status-dot"></span><span>FRONTEND READY</span></div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR OWN WEB WORKSPACE</p>
+          <h1>Your web.<br><span>Your workspace.</span></h1>
+          <p class="hero-description">This GitHub Pages front end connects to your own deployed Ultraviolet server. Save the server address once, then search or open a website.</p>
+        </div>
+      </section>
+
+      <section class="search-card" aria-labelledby="search-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">01 / DESTINATION</p><h2 id="search-heading">Where to?</h2></div>
+        </div>
+        <form id="portal-form" class="search-form">
+          <label class="visually-hidden" for="target-input">Website address or search phrase</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="target-input" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a website URL" required>
+          <button class="primary-button" type="submit">Go <span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="portal-message" class="portal-message" role="status" aria-live="polite">First, deploy the Node.js backend and save its HTTPS address below.</p>
+        <div class="quick-section">
+          <span class="section-label">QUICK LAUNCH</span>
+          <div class="quick-links">
+            <button class="quick-link" type="button" data-target="https://www.google.com/"><span class="quick-symbol google">G</span>Google</button>
+            <button class="quick-link" type="button" data-target="https://www.youtube.com/"><span class="quick-symbol youtube">▶</span>YouTube</button>
+            <button class="quick-link" type="button" data-target="https://www.wikipedia.org/"><span class="quick-symbol wiki">W</span>Wikipedia</button>
+            <button class="quick-link" type="button" data-target="https://www.reddit.com/"><span class="quick-symbol reddit">r</span>Reddit</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="search-card" style="margin-top:18px" aria-labelledby="server-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">02 / CONNECTION</p><h2 id="server-heading">Your proxy server</h2></div>
+        </div>
+        <p class="portal-note">GitHub Pages serves static files only. Ultraviolet's Node.js server and WebSocket transport must run on a separate host. Deploy this repository's Node app first, then paste its base URL here.</p>
+        <form id="server-form" class="connection-form">
+          <label class="visually-hidden" for="server-input">Deployed proxy server URL</label>
+          <input id="server-input" type="url" placeholder="https://your-proxy-server.example" autocomplete="url" required>
+          <button class="secondary-button" type="submit">Save server</button>
+        </form>
+        <p id="server-message" class="portal-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="info-row">
+        <div class="info-item"><span class="info-number">01</span><div><strong>Deploy the backend</strong><p>Use a Node.js host with HTTPS and WebSocket support.</p></div></div>
+        <div class="info-item"><span class="info-number">02</span><div><strong>Save its address</strong><p>The address is stored in this browser on this site.</p></div></div>
+        <div class="info-item"><span class="info-number">03</span><div><strong>Use responsibly</strong><p>Follow network rules and the proxy host's acceptable-use policy.</p></div></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>PROXY <span class="footer-muted">/ Ultraviolet-powered</span></span>
+      <span><a href="https://github.com/idkeman/Proxy">Source</a><span class="footer-separator">·</span><a href="https://github.com/titaniumnetwork-dev/Ultraviolet">Ultraviolet</a></span>
+    </footer>
+  </div>
+  <script>
+    "use strict";
+    const targetInput = document.getElementById("target-input");
+    const serverInput = document.getElementById("server-input");
+    const portalMessage = document.getElementById("portal-message");
+    const serverMessage = document.getElementById("server-message");
+
+    function readSavedServer() {
+      try { return localStorage.getItem("proxy-backend-url") || ""; }
+      catch { return ""; }
+    }
+
+    function normalizeTarget(input) {
+      const value = String(input || "").trim();
+      if (!value) throw new Error("Enter a website address or search phrase.");
+      try {
+        const parsed = new URL(value);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+      } catch {}
+      try {
+        const parsed = new URL("https://" + value);
+        if (parsed.hostname.includes(".") && !parsed.hostname.includes(" ")) return parsed.href;
+      } catch {}
+      return "https://www.google.com/search?q=" + encodeURIComponent(value);
+    }
+
+    function launchTarget(input) {
+      let backend = readSavedServer();
+      if (!backend) {
+        portalMessage.textContent = "No server is saved yet. Deploy the backend and save its base URL below.";
+        portalMessage.classList.add("error");
+        document.getElementById("server-input").focus();
+        return;
+      }
+      try {
+        const parsed = new URL(backend);
+        if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+          throw new Error("For a public server, use an HTTPS address.");
+        }
+        const target = normalizeTarget(input);
+        portalMessage.classList.remove("error");
+        portalMessage.textContent = "Opening the destination on your proxy server…";
+        window.location.assign(parsed.origin + "/?url=" + encodeURIComponent(target));
+      } catch (error) {
+        portalMessage.textContent = error.message || "Check the server address and try again.";
+        portalMessage.classList.add("error");
+      }
+    }
+
+    document.getElementById("portal-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      launchTarget(targetInput.value);
+    });
+
+    document.getElementById("server-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      try {
+        const parsed = new URL(serverInput.value.trim());
+        if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+          throw new Error("Use an HTTPS URL for a public server.");
+        }
+        const base = parsed.origin;
+        localStorage.setItem("proxy-backend-url", base);
+        serverInput.value = base;
+        serverMessage.textContent = "Saved server: " + base;
+        serverMessage.classList.remove("error");
+        portalMessage.textContent = "Server saved. Enter a destination to launch your workspace.";
+        portalMessage.classList.remove("error");
+      } catch (error) {
+        serverMessage.textContent = error.message || "Enter a valid HTTPS server URL.";
+        serverMessage.classList.add("error");
+      }
+    });
+
+    document.querySelectorAll("[data-target]").forEach(function(button) {
+      button.addEventListener("click", function() {
+        targetInput.value = button.getAttribute("data-target") || "";
+        targetInput.focus();
+      });
+    });
+
+    serverInput.value = readSavedServer();
+    if (serverInput.value) {
+      serverMessage.textContent = "Saved server: " + serverInput.value;
+      portalMessage.textContent = "Server saved. Enter a destination to launch your workspace.";
+    }
+  </script>
+</body>
+</html>

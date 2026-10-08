@@ -1,3 +1,4 @@
+import { URL } from "node:url";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import express from "express";
@@ -11,6 +12,40 @@ const app = express();
 const publicPath = join(process.cwd(), "public");
 
 app.disable("x-powered-by");
+
+function getRequestedTarget(req) {
+  try {
+    const target = new URL(req.url || "/", "http://localhost").searchParams.get("url");
+    if (!target) return null;
+
+    const parsed = new URL(target);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+app.use((req, res, next) => {
+  if (!new URL(req.url || "/", "http://localhost").searchParams.has("url")) {
+    next();
+    return;
+  }
+
+  const target = getRequestedTarget(req);
+  if (!target) {
+    res.status(400).send("Invalid proxy target.");
+    return;
+  }
+
+  // The normalized target is intentionally carried by the request URL.
+  // public/app.js consumes the same value and starts Ultraviolet with it.
+  res.locals.proxyTarget = target;
+  next();
+});
 
 app.get("/healthz", (_req, res) => {
   res.status(200).json({ status: "ok" });

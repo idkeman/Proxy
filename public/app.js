@@ -34,6 +34,22 @@ function setSavedServer(url) {
   }
 }
 
+function setBackendTarget(url) {
+  // This is the actual destination passed from the frontend to this backend.
+  serverInput.value = url;
+  try {
+    localStorage.setItem("proxy-target-url", url);
+  } catch {}
+}
+
+function getSavedTarget() {
+  try {
+    return localStorage.getItem("proxy-target-url") || "";
+  } catch {
+    return "";
+  }
+}
+
 function showMessage(message, isError, detail) {
   error.textContent = message;
   error.classList.toggle("error", Boolean(isError));
@@ -88,6 +104,9 @@ async function startProxy(rawInput) {
   }
 
   try {
+    // Every launch updates the backend's target field from the frontend target.
+    setBackendTarget(target);
+
     const backend = await getBackendOrigin();
     const isExternalBackend = backend !== location.origin;
 
@@ -102,7 +121,11 @@ async function startProxy(rawInput) {
     showMessage("Opening…", false);
     await registerSW();
 
-    const wispUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/wisp/";
+    const wispUrl =
+      (location.protocol === "https:" ? "wss://" : "ws://") +
+      location.host +
+      "/wisp/";
+
     const currentTransport = await connection.getTransport();
     if (currentTransport !== "/epoxy/index.mjs") {
       await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
@@ -114,7 +137,11 @@ async function startProxy(rawInput) {
     showMessage("Ready.", false);
   } catch (err) {
     connectionLabel.textContent = "ERROR";
-    showMessage("Proxy could not start.", true, String(err && err.stack ? err.stack : err));
+    showMessage(
+      "Proxy could not start.",
+      true,
+      String(err && err.stack ? err.stack : err)
+    );
   }
 }
 
@@ -133,7 +160,7 @@ serverForm.addEventListener("submit", (event) => {
   try {
     const origin = normalizeBackend(serverInput.value);
     if (!setSavedServer(origin)) throw new Error("Could not save the server address.");
-    serverInput.value = origin;
+    serverInput.value = getSavedTarget() || origin;
     serverMessage.textContent = "Saved.";
     serverMessage.classList.remove("error");
     setupPanel.removeAttribute("open");
@@ -173,12 +200,24 @@ document.addEventListener("keydown", (event) => {
 });
 
 const savedServer = getSavedServer();
+const savedTarget = getSavedTarget();
+
 if (savedServer) {
-  serverInput.value = savedServer;
+  serverMessage.textContent = "Saved.";
+}
+
+if (savedTarget) {
+  serverInput.value = savedTarget;
 }
 
 const requestedUrl = new URLSearchParams(location.search).get("url");
 if (requestedUrl) {
-  address.value = requestedUrl;
-  startProxy(requestedUrl);
+  try {
+    const target = search(requestedUrl, searchEngine.value || "https://www.google.com/search?q=%s");
+    setBackendTarget(target);
+    address.value = target;
+    startProxy(target);
+  } catch (err) {
+    showMessage(err.message || "Enter a valid website address.", true);
+  }
 }

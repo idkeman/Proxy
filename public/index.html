@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#090d18">
-    <meta name="description" content="Proxy is a custom web workspace powered by Ultraviolet.">
-    <title>Proxy — Web Workspace</title>
+    <meta name="description" content="Simple web proxy powered by Ultraviolet.">
+    <title>Proxy</title>
     <link rel="stylesheet" href="styles.css">
     <script src="/baremux/index.js"></script>
     <script src="/uv/uv.bundle.js"></script>
@@ -16,84 +16,69 @@
       <header class="topbar">
         <a class="brand" href="/" aria-label="Proxy home">
           <span class="brand-mark">P<span>.</span></span>
-          <span class="brand-copy">
-            <strong>PROXY</strong>
-            <span>WEB WORKSPACE</span>
-          </span>
+          <span class="brand-name">PROXY</span>
         </a>
-        <div class="connection-pill"><span class="status-dot"></span><span id="connection-label">ENGINE READY</span></div>
+        <span id="connection-label" class="connection-label">READY</span>
       </header>
 
       <main id="landing-view" class="landing-view">
-        <section class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="eyebrow-line"></span> ULTRAVIOLET POWERED</p>
-            <h1>Your web.<br><span>Your workspace.</span></h1>
-            <p class="hero-description">A clean, focused browser interface for opening websites in a separate web workspace.</p>
-          </div>
-          <aside class="side-note">
-            <span class="side-note-icon">↗</span>
-            <span class="side-note-title">One address bar</span>
-            <span class="side-note-text">Enter a web address or search for anything.</span>
-          </aside>
+        <section class="welcome">
+          <p class="eyebrow">ULTRAVIOLET</p>
+          <h1>Browse the web.</h1>
+          <p>Enter a URL or type a search.</p>
         </section>
 
         <section class="search-card" aria-labelledby="search-heading">
-          <div class="card-heading">
-            <div>
-              <p class="eyebrow">START BROWSING</p>
-              <h2 id="search-heading">Where to?</h2>
-            </div>
-            <span class="keyboard-hint">ENTER ↵</span>
-          </div>
+          <h2 id="search-heading" class="visually-hidden">Open a website</h2>
           <form id="uv-form" class="search-form">
             <label class="visually-hidden" for="uv-address">Website address or search</label>
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input id="uv-address" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a website URL" autofocus>
+            <input id="uv-address" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a URL" autofocus>
             <input id="uv-search-engine" type="hidden" value="https://www.google.com/search?q=%s">
-            <button class="primary-button" type="submit">Go <span aria-hidden="true">↗</span></button>
+            <button class="primary-button" type="submit">Go</button>
           </form>
-          <p id="uv-error" class="status-message" role="status" aria-live="polite">Ready when you are.</p>
-          <pre id="uv-error-code" class="error-detail" hidden></pre>
-          <div class="quick-section">
-            <span class="section-label">QUICK LAUNCH</span>
-            <div class="quick-links">
-              <button class="quick-link" type="button" data-url="https://www.google.com/"><span class="quick-symbol google">G</span>Google</button>
-              <button class="quick-link" type="button" data-url="https://www.youtube.com/"><span class="quick-symbol youtube">▶</span>YouTube</button>
-              <button class="quick-link" type="button" data-url="https://www.wikipedia.org/"><span class="quick-symbol wiki">W</span>Wikipedia</button>
-              <button class="quick-link" type="button" data-url="https://www.reddit.com/"><span class="quick-symbol reddit">r</span>Reddit</button>
-            </div>
+
+          <div class="helper-row">
+            <p id="uv-error" class="status-message" role="status" aria-live="polite">Ready.</p>
+            <pre id="uv-error-code" class="error-detail" hidden></pre>
+            <span class="enter-hint">Press Enter ↵</span>
           </div>
         </section>
 
-        <section class="info-row">
-          <div class="info-item"><span class="info-number">01</span><div><strong>Enter a destination</strong><p>Use a full URL or type a search phrase.</p></div></div>
-          <div class="info-item"><span class="info-number">02</span><div><strong>Open in workspace</strong><p>Your page loads inside this view.</p></div></div>
-          <div class="info-item"><span class="info-number">03</span><div><strong>Keep it responsible</strong><p>Follow the rules of your network and the sites you visit.</p></div></div>
-        </section>
+        <details class="setup-panel">
+          <summary>Connection settings</summary>
+          <p>Only needed when this page is hosted on GitHub Pages. When this page is served by the proxy backend itself, you can ignore this.</p>
+          <form id="server-form" class="connection-form">
+            <label class="visually-hidden" for="server-input">Proxy server URL</label>
+            <input id="server-input" type="url" placeholder="https://your-proxy-server.example" autocomplete="url">
+            <button class="secondary-button" type="submit">Save</button>
+          </form>
+          <p id="server-message" class="portal-message" role="status" aria-live="polite"></p>
+        </details>
+
+        <div class="simple-links">
+          <a href="https://github.com/idkeman/Proxy">Source</a>
+          <span>•</span>
+          <a href="https://github.com/titaniumnetwork-dev/Ultraviolet">Ultraviolet</a>
+        </div>
       </main>
 
       <section id="browser-view" class="browser-view" aria-label="Proxy browser" hidden>
         <div class="browser-toolbar">
-          <button id="home-button" class="toolbar-button" type="button" aria-label="Return home" title="Home">⌂</button>
-          <button id="back-button" class="toolbar-button" type="button" aria-label="Go back" title="Back">←</button>
-          <button id="forward-button" class="toolbar-button" type="button" aria-label="Go forward" title="Forward">→</button>
+          <button id="home-button" class="toolbar-button" type="button" aria-label="Home" title="Home">⌂</button>
+          <button id="back-button" class="toolbar-button" type="button" aria-label="Back" title="Back">←</button>
+          <button id="forward-button" class="toolbar-button" type="button" aria-label="Forward" title="Forward">→</button>
           <form id="nav-form" class="nav-form">
-            <label class="visually-hidden" for="nav-address">Current website address</label>
-            <span class="lock-icon" aria-hidden="true">↗</span>
-            <input id="nav-address" type="text" autocomplete="url" spellcheck="false" placeholder="Enter URL or search">
+            <label class="visually-hidden" for="nav-address">Current address</label>
+            <input id="nav-address" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a URL">
             <button type="submit" class="nav-go">Go</button>
           </form>
-          <button id="reload-button" class="toolbar-button" type="button" aria-label="Reload page" title="Reload">↻</button>
+          <button id="reload-button" class="toolbar-button" type="button" aria-label="Reload" title="Reload">↻</button>
         </div>
         <iframe id="uv-frame" title="Proxied website" referrerpolicy="no-referrer"></iframe>
       </section>
-
-      <footer class="site-footer">
-        <span>PROXY <span class="footer-muted">/ Built with open-source Ultraviolet</span></span>
-        <span><a href="https://github.com/idkeman/Proxy">Source</a><span class="footer-separator">·</span><a href="https://github.com/titaniumnetwork-dev/Ultraviolet">Ultraviolet</a></span>
-      </footer>
     </div>
+
     <script src="register-sw.js"></script>
     <script src="search.js"></script>
     <script src="app.js"></script>

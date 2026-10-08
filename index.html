@@ -4,139 +4,124 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090d18">
-  <meta name="description" content="Connect to your own self-hosted Ultraviolet web workspace.">
-  <title>Proxy — Connect to your workspace</title>
+  <meta name="description" content="Simple front end for your Ultraviolet proxy.">
+  <title>Proxy</title>
   <link rel="stylesheet" href="./public/styles.css">
 </head>
 <body>
-  <div class="site-shell portal-shell">
+  <div class="site-shell">
     <header class="topbar">
       <a class="brand" href="./" aria-label="Proxy home">
         <span class="brand-mark">P<span>.</span></span>
-        <span class="brand-copy"><strong>PROXY</strong><span>WEB WORKSPACE</span></span>
+        <span class="brand-name">PROXY</span>
       </a>
-      <div class="connection-pill"><span class="status-dot"></span><span>FRONTEND READY</span></div>
+      <span class="connection-label">FRONTEND</span>
     </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR OWN WEB WORKSPACE</p>
-          <h1>Your web.<br><span>Your workspace.</span></h1>
-          <p class="hero-description">This GitHub Pages front end connects to your own deployed Ultraviolet server. Save the server address once, then search or open a website.</p>
-        </div>
+    <main class="landing-view">
+      <section class="welcome">
+        <p class="eyebrow">YOUR PROXY</p>
+        <h1>Browse the web.</h1>
+        <p>Enter a URL or search. Your saved proxy server handles the rest.</p>
       </section>
 
       <section class="search-card" aria-labelledby="search-heading">
-        <div class="card-heading">
-          <div><p class="eyebrow">01 / DESTINATION</p><h2 id="search-heading">Where to?</h2></div>
-        </div>
+        <h2 id="search-heading" class="visually-hidden">Open a website</h2>
         <form id="portal-form" class="search-form">
           <label class="visually-hidden" for="target-input">Website address or search phrase</label>
           <span class="search-icon" aria-hidden="true">⌕</span>
-          <input id="target-input" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a website URL" required>
-          <button class="primary-button" type="submit">Go <span aria-hidden="true">↗</span></button>
+          <input id="target-input" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a URL" autofocus required>
+          <button class="primary-button" type="submit">Go</button>
         </form>
+
         <div class="preset-picker">
-          <label for="preset-select" class="section-label">ALL WEBSITE LOAD PRESETS · 38 SITES</label>
-          <select id="preset-select" aria-label="Choose a Website Load preset">
-            <option value="">Choose a preset website…</option>
-          <optgroup label="🎮 Games">
-            <option value="https://mod.fnfhub.net/24879/">Indie cross (FNF)</option>
-            <option value="https://basketballlegends-online.github.io/go/class-12.html#/">Basketball Legends</option>
-            <option value="https://d3rtzzzsiu7gdr.cloudfront.net/">Hypackel</option>
-            <option value="https://unblockedgamespod.gitlab.io/">Games Pod</option>
-            <option value="https://waitwhosjoe.github.io/">More Games</option>
-            <option value="https://76ezgames.github.io/">EZ Games</option>
-            <option value="https://games.budsin.dev/">Budsin Games</option>
-          </optgroup>
-          <optgroup label="🎬 Movies &amp; Misc">
-            <option value="https://indica.bond/">Indica</option>
-            <option value="https://www.lookmovie2.to/">LookMovie2</option>
-            <option value="https://anigo.ro/">Anigo</option>
-            <option value="https://animeuniverse.best/">Anime Universe</option>
-            <option value="https://lunastream.gay/">Lunastream</option>
-            <option value="https://thesolver.oneapp.dev/">Sudoku Solver</option>
-            <option value="https://soundbuttonsworld.com">Soundboard World</option>
-          </optgroup>
-          <optgroup label="🔗 Proxies">
-            <option value="https://policeinfo.global.ssl.fastly.net/math/">Froggies</option>
-            <option value="https://bullguardian.s3.amazonaws.com/index.html">Bullguardian</option>
-            <option value="https://catclass.net/">Catclass</option>
-            <option value="https://1void-vision2.global.ssl.fastly.net/">Froggies Backup</option>
-            <option value="https://cfisd.mathforkids.buzz.cdn.cloudflare.net/">Velara</option>
-            <option value="https://truffledisgoated.nya.pub/">Truffled</option>
-            <option value="https://kyro.li/">Kyro</option>
-          </optgroup>
-          <optgroup label="My own creations!">
-            <option value="https://idkeman.github.io/snake-replica/">Snake Replica</option>
-            <option value="https://bit.ly/1mp0st3">1mp0st3</option>
-            <option value="https://idkeman.github.io/Towerd/">Towerd</option>
-            <option value="https://idkeman.github.io/Game-making/">Game-making</option>
-            <option value="https://idkeman.github.io/CaseClicker/">CaseClicker</option>
-            <option value="https://idkeman.github.io/Pokemon-cheat-sheet/">Pokémon Cheat Sheet</option>
-            <option value="https://idkeman.github.io/bitburner/">Bitburner</option>
-          </optgroup>
-          <optgroup label="Working Proxies">
-            <option value="https://pgis.x10.mx/">PGIS 2</option>
-            <option value="https://0800webdev.github.io/PGIS/">PGIS GitHub Pages</option>
-            <option value="https://0800webdev.github.io/UBGdir/">UBGdir</option>
-          </optgroup>
-          <optgroup label="Scratch">
-            <option value="https://scratch.mit.edu/projects/701435319/">JJK game</option>
-            <option value="https://scratch.mit.edu/projects/1083783502/">Culling game</option>
-            <option value="https://scratch.mit.edu/projects/1050193575/">Shinjuku showdown</option>
-            <option value="https://scratch.mit.edu/projects/1004826310/">Yuji Itadori n Ryomen Sukuna</option>
-            <option value="https://scratch.mit.edu/projects/479266014/">Jotaro Kujo</option>
-            <option value="https://scratch.mit.edu/projects/475566185/">Dio Brando</option>
-            <option value="https://scratch.mit.edu/projects/486826775/">Jean Pierre Polnareff</option>
-          </optgroup>
+          <label for="preset-select" class="section-label">PRESETS</label>
+          <select id="preset-select" aria-label="Choose a preset website">
+            <option value="">Choose a site…</option>
+            <optgroup label="Games">
+              <option value="https://mod.fnfhub.net/24879/">Indie cross (FNF)</option>
+              <option value="https://basketballlegends-online.github.io/go/class-12.html#/">Basketball Legends</option>
+              <option value="https://d3rtzzzsiu7gdr.cloudfront.net/">Hypackel</option>
+              <option value="https://unblockedgamespod.gitlab.io/">Games Pod</option>
+              <option value="https://waitwhosjoe.github.io/">More Games</option>
+              <option value="https://76ezgames.github.io/">EZ Games</option>
+              <option value="https://games.budsin.dev/">Budsin Games</option>
+            </optgroup>
+            <optgroup label="Movies & Misc">
+              <option value="https://indica.bond/">Indica</option>
+              <option value="https://www.lookmovie2.to/">LookMovie2</option>
+              <option value="https://anigo.ro/">Anigo</option>
+              <option value="https://animeuniverse.best/">Anime Universe</option>
+              <option value="https://lunastream.gay/">Lunastream</option>
+              <option value="https://thesolver.oneapp.dev/">Sudoku Solver</option>
+              <option value="https://soundbuttonsworld.com/">Soundboard World</option>
+            </optgroup>
+            <optgroup label="Proxies">
+              <option value="https://policeinfo.global.ssl.fastly.net/math/">Froggies</option>
+              <option value="https://bullguardian.s3.amazonaws.com/index.html">Bullguardian</option>
+              <option value="https://catclass.net/">Catclass</option>
+              <option value="https://1void-vision2.global.ssl.fastly.net/">Froggies Backup</option>
+              <option value="https://cfisd.mathforkids.buzz.cdn.cloudflare.net/">Velara</option>
+              <option value="https://truffledisgoated.nya.pub/">Truffled</option>
+              <option value="https://kyro.li/">Kyro</option>
+            </optgroup>
+            <optgroup label="My own creations!">
+              <option value="https://idkeman.github.io/snake-replica/">Snake Replica</option>
+              <option value="https://bit.ly/1mp0st3">1mp0st3</option>
+              <option value="https://idkeman.github.io/Towerd/">Towerd</option>
+              <option value="https://idkeman.github.io/Game-making/">Game-making</option>
+              <option value="https://idkeman.github.io/CaseClicker/">CaseClicker</option>
+              <option value="https://idkeman.github.io/Pokemon-cheat-sheet/">Pokémon Cheat Sheet</option>
+              <option value="https://idkeman.github.io/bitburner/">Bitburner</option>
+            </optgroup>
+            <optgroup label="Working Proxies">
+              <option value="https://pgis.x10.mx/">PGIS 2</option>
+              <option value="https://0800webdev.github.io/PGIS/">PGIS GitHub Pages</option>
+              <option value="https://0800webdev.github.io/UBGdir/">UBGdir</option>
+            </optgroup>
+            <optgroup label="Scratch">
+              <option value="https://scratch.mit.edu/projects/701435319/">JJK game</option>
+              <option value="https://scratch.mit.edu/projects/1083783502/">Culling game</option>
+              <option value="https://scratch.mit.edu/projects/1050193575/">Shinjuku showdown</option>
+              <option value="https://scratch.mit.edu/projects/1004826310/">Yuji Itadori n Ryomen Sukuna</option>
+              <option value="https://scratch.mit.edu/projects/479266014/">Jotaro Kujo</option>
+              <option value="https://scratch.mit.edu/projects/475566185/">Dio Brando</option>
+              <option value="https://scratch.mit.edu/projects/486826775/">Jean Pierre Polnareff</option>
+            </optgroup>
           </select>
-          <p class="preset-help">Choose a site to fill the address field, then press Go.</p>
+          <p class="preset-help">Selecting a preset only fills the box. Press Go to open it.</p>
         </div>
-        <p id="portal-message" class="portal-message" role="status" aria-live="polite">First, deploy the Node.js backend and save its HTTPS address below.</p>
-        <div class="quick-section">
-          <span class="section-label">QUICK LAUNCH</span>
-          <div class="quick-links">
-            <button class="quick-link" type="button" data-target="https://www.google.com/"><span class="quick-symbol google">G</span>Google</button>
-            <button class="quick-link" type="button" data-target="https://www.youtube.com/"><span class="quick-symbol youtube">▶</span>YouTube</button>
-            <button class="quick-link" type="button" data-target="https://www.wikipedia.org/"><span class="quick-symbol wiki">W</span>Wikipedia</button>
-            <button class="quick-link" type="button" data-target="https://www.reddit.com/"><span class="quick-symbol reddit">r</span>Reddit</button>
-          </div>
-        </div>
+
+        <p id="portal-message" class="portal-message" role="status" aria-live="polite">Ready.</p>
       </section>
 
-      <section class="search-card" style="margin-top:18px" aria-labelledby="server-heading">
-        <div class="card-heading">
-          <div><p class="eyebrow">02 / CONNECTION</p><h2 id="server-heading">Your proxy server</h2></div>
-        </div>
-        <p class="portal-note">GitHub Pages serves static files only. Ultraviolet's Node.js server and WebSocket transport must run on a separate host. Deploy this repository's Node app first, then paste its base URL here.</p>
+      <details class="setup-panel">
+        <summary>Connection settings</summary>
+        <p>Only needed on this GitHub Pages front end. Your proxy backend must be deployed separately.</p>
         <form id="server-form" class="connection-form">
-          <label class="visually-hidden" for="server-input">Deployed proxy server URL</label>
-          <input id="server-input" type="url" placeholder="https://your-proxy-server.example" autocomplete="url" required>
-          <button class="secondary-button" type="submit">Save server</button>
+          <label class="visually-hidden" for="server-input">Proxy server URL</label>
+          <input id="server-input" type="url" placeholder="https://your-proxy-server.example" autocomplete="url">
+          <button class="secondary-button" type="submit">Save</button>
         </form>
         <p id="server-message" class="portal-message" role="status" aria-live="polite"></p>
-      </section>
+      </details>
 
-      <section class="info-row">
-        <div class="info-item"><span class="info-number">01</span><div><strong>Deploy the backend</strong><p>Use a Node.js host with HTTPS and WebSocket support.</p></div></div>
-        <div class="info-item"><span class="info-number">02</span><div><strong>Save its address</strong><p>The address is stored in this browser on this site.</p></div></div>
-        <div class="info-item"><span class="info-number">03</span><div><strong>Use responsibly</strong><p>Follow network rules and the proxy host's acceptable-use policy.</p></div></div>
-      </section>
+      <div class="simple-links">
+        <a href="https://github.com/idkeman/Proxy">Source</a>
+        <span>•</span>
+        <a href="https://github.com/titaniumnetwork-dev/Ultraviolet">Ultraviolet</a>
+      </div>
     </main>
-
-    <footer class="site-footer">
-      <span>PROXY <span class="footer-muted">/ Ultraviolet-powered</span></span>
-      <span><a href="https://github.com/idkeman/Proxy">Source</a><span class="footer-separator">·</span><a href="https://github.com/titaniumnetwork-dev/Ultraviolet">Ultraviolet</a></span>
-    </footer>
   </div>
+
   <script>
     "use strict";
+
     const targetInput = document.getElementById("target-input");
     const serverInput = document.getElementById("server-input");
     const portalMessage = document.getElementById("portal-message");
     const serverMessage = document.getElementById("server-message");
+    const setupPanel = document.querySelector(".setup-panel");
 
     function readSavedServer() {
       try { return localStorage.getItem("proxy-backend-url") || ""; }
@@ -146,85 +131,82 @@
     function normalizeTarget(input) {
       const value = String(input || "").trim();
       if (!value) throw new Error("Enter a website address or search phrase.");
+
       try {
         const parsed = new URL(value);
         if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
       } catch {}
+
       try {
         const parsed = new URL("https://" + value);
         if (parsed.hostname.includes(".") && !parsed.hostname.includes(" ")) return parsed.href;
       } catch {}
+
       return "https://www.google.com/search?q=" + encodeURIComponent(value);
     }
 
+    function normalizeBackend(input) {
+      const parsed = new URL(String(input || "").trim());
+      if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+        throw new Error("Use an HTTPS proxy server URL.");
+      }
+      return parsed.origin;
+    }
+
     function launchTarget(input) {
-      let backend = readSavedServer();
+      const backend = readSavedServer();
       if (!backend) {
-        portalMessage.textContent = "No server is saved yet. Deploy the backend and save its base URL below.";
+        portalMessage.textContent = "Set your proxy server under Connection settings first.";
         portalMessage.classList.add("error");
-        document.getElementById("server-input").focus();
+        setupPanel.open = true;
+        serverInput.focus();
         return;
       }
+
       try {
-        const parsed = new URL(backend);
-        if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-          throw new Error("For a public server, use an HTTPS address.");
-        }
         const target = normalizeTarget(input);
+        const origin = normalizeBackend(backend);
         portalMessage.classList.remove("error");
-        portalMessage.textContent = "Opening the destination on your proxy server…";
-        window.location.assign(parsed.origin + "/?url=" + encodeURIComponent(target));
+        portalMessage.textContent = "Opening…";
+        window.location.assign(origin + "/?url=" + encodeURIComponent(target));
       } catch (error) {
-        portalMessage.textContent = error.message || "Check the server address and try again.";
+        portalMessage.textContent = error.message || "Check your settings.";
         portalMessage.classList.add("error");
       }
     }
-
-    document.getElementById("preset-select").addEventListener("change", function() {
-      if (this.value) {
-        targetInput.value = this.value;
-        targetInput.focus();
-        portalMessage.classList.remove("error");
-        portalMessage.textContent = "Preset selected. Press Go to open it through your proxy server.";
-      }
-    });
 
     document.getElementById("portal-form").addEventListener("submit", function(event) {
       event.preventDefault();
       launchTarget(targetInput.value);
     });
 
+    document.getElementById("preset-select").addEventListener("change", function() {
+      if (!this.value) return;
+      targetInput.value = this.value;
+      targetInput.focus();
+      portalMessage.textContent = "Preset selected. Press Go.";
+      portalMessage.classList.remove("error");
+    });
+
     document.getElementById("server-form").addEventListener("submit", function(event) {
       event.preventDefault();
       try {
-        const parsed = new URL(serverInput.value.trim());
-        if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-          throw new Error("Use an HTTPS URL for a public server.");
-        }
-        const base = parsed.origin;
-        localStorage.setItem("proxy-backend-url", base);
-        serverInput.value = base;
-        serverMessage.textContent = "Saved server: " + base;
+        const origin = normalizeBackend(serverInput.value);
+        localStorage.setItem("proxy-backend-url", origin);
+        serverInput.value = origin;
+        serverMessage.textContent = "Saved.";
         serverMessage.classList.remove("error");
-        portalMessage.textContent = "Server saved. Enter a destination to launch your workspace.";
-        portalMessage.classList.remove("error");
+        setupPanel.open = false;
+        targetInput.focus();
       } catch (error) {
         serverMessage.textContent = error.message || "Enter a valid HTTPS server URL.";
         serverMessage.classList.add("error");
       }
     });
 
-    document.querySelectorAll("[data-target]").forEach(function(button) {
-      button.addEventListener("click", function() {
-        targetInput.value = button.getAttribute("data-target") || "";
-        targetInput.focus();
-      });
-    });
-
     serverInput.value = readSavedServer();
     if (serverInput.value) {
-      serverMessage.textContent = "Saved server: " + serverInput.value;
-      portalMessage.textContent = "Server saved. Enter a destination to launch your workspace.";
+      serverMessage.textContent = "Saved.";
     }
   </script>
 </body>

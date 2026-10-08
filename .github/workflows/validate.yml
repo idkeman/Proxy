@@ -1,0 +1,43 @@
+name: Validate Proxy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  syntax-and-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/index.js
+          node --check public/app.js
+          node --check public/search.js
+          node --check public/register-sw.js
+          node --check public/uv/uv.config.js
+      - name: Smoke test the server
+        run: |
+          npm start > /tmp/proxy-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8080/healthz > /tmp/proxy-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q '"status":"ok"' /tmp/proxy-health.json
+          curl --silent --fail http://127.0.0.1:8080/ | grep -qi 'PROXY'
+          curl --silent --fail http://127.0.0.1:8080/uv/uv.bundle.js > /dev/null
+          curl --silent --fail http://127.0.0.1:8080/baremux/index.js > /dev/null
+          curl --silent --fail http://127.0.0.1:8080/epoxy/index.mjs > /dev/null

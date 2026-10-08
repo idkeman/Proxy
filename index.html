@@ -37,6 +37,63 @@
           <input id="target-input" type="text" autocomplete="url" spellcheck="false" placeholder="Search or enter a website URL" required>
           <button class="primary-button" type="submit">Go <span aria-hidden="true">↗</span></button>
         </form>
+        <div class="preset-picker">
+          <label for="preset-select" class="section-label">ALL WEBSITE LOAD PRESETS · 38 SITES</label>
+          <select id="preset-select" aria-label="Choose a Website Load preset">
+            <option value="">Choose a preset website…</option>
+          <optgroup label="🎮 Games">
+            <option value="https://mod.fnfhub.net/24879/">Indie cross (FNF)</option>
+            <option value="https://basketballlegends-online.github.io/go/class-12.html#/">Basketball Legends</option>
+            <option value="https://d3rtzzzsiu7gdr.cloudfront.net/">Hypackel</option>
+            <option value="https://unblockedgamespod.gitlab.io/">Games Pod</option>
+            <option value="https://waitwhosjoe.github.io/">More Games</option>
+            <option value="https://76ezgames.github.io/">EZ Games</option>
+            <option value="https://games.budsin.dev/">Budsin Games</option>
+          </optgroup>
+          <optgroup label="🎬 Movies &amp; Misc">
+            <option value="https://indica.bond/">Indica</option>
+            <option value="https://www.lookmovie2.to/">LookMovie2</option>
+            <option value="https://anigo.ro/">Anigo</option>
+            <option value="https://animeuniverse.best/">Anime Universe</option>
+            <option value="https://lunastream.gay/">Lunastream</option>
+            <option value="https://thesolver.oneapp.dev/">Sudoku Solver</option>
+            <option value="https://soundbuttonsworld.com">Soundboard World</option>
+          </optgroup>
+          <optgroup label="🔗 Proxies">
+            <option value="https://policeinfo.global.ssl.fastly.net/math/">Froggies</option>
+            <option value="https://bullguardian.s3.amazonaws.com/index.html">Bullguardian</option>
+            <option value="https://catclass.net/">Catclass</option>
+            <option value="https://1void-vision2.global.ssl.fastly.net/">Froggies Backup</option>
+            <option value="https://cfisd.mathforkids.buzz.cdn.cloudflare.net/">Velara</option>
+            <option value="https://truffledisgoated.nya.pub/">Truffled</option>
+            <option value="https://kyro.li/">Kyro</option>
+          </optgroup>
+          <optgroup label="My own creations!">
+            <option value="https://idkeman.github.io/snake-replica/">Snake Replica</option>
+            <option value="https://bit.ly/1mp0st3">1mp0st3</option>
+            <option value="https://idkeman.github.io/Towerd/">Towerd</option>
+            <option value="https://idkeman.github.io/Game-making/">Game-making</option>
+            <option value="https://idkeman.github.io/CaseClicker/">CaseClicker</option>
+            <option value="https://idkeman.github.io/Pokemon-cheat-sheet/">Pokémon Cheat Sheet</option>
+            <option value="https://idkeman.github.io/bitburner/">Bitburner</option>
+          </optgroup>
+          <optgroup label="Working Proxies">
+            <option value="https://pgis.x10.mx/">PGIS 2</option>
+            <option value="https://0800webdev.github.io/PGIS/">PGIS GitHub Pages</option>
+            <option value="https://0800webdev.github.io/UBGdir/">UBGdir</option>
+          </optgroup>
+          <optgroup label="Scratch">
+            <option value="https://scratch.mit.edu/projects/701435319/">JJK game</option>
+            <option value="https://scratch.mit.edu/projects/1083783502/">Culling game</option>
+            <option value="https://scratch.mit.edu/projects/1050193575/">Shinjuku showdown</option>
+            <option value="https://scratch.mit.edu/projects/1004826310/">Yuji Itadori n Ryomen Sukuna</option>
+            <option value="https://scratch.mit.edu/projects/479266014/">Jotaro Kujo</option>
+            <option value="https://scratch.mit.edu/projects/475566185/">Dio Brando</option>
+            <option value="https://scratch.mit.edu/projects/486826775/">Jean Pierre Polnareff</option>
+          </optgroup>
+          </select>
+          <p class="preset-help">Choose a site to fill the address field, then press Go.</p>
+        </div>
         <p id="portal-message" class="portal-message" role="status" aria-live="polite">First, deploy the Node.js backend and save its HTTPS address below.</p>
         <div class="quick-section">
           <span class="section-label">QUICK LAUNCH</span>
@@ -122,6 +179,15 @@
         portalMessage.classList.add("error");
       }
     }
+
+    document.getElementById("preset-select").addEventListener("change", function() {
+      if (this.value) {
+        targetInput.value = this.value;
+        targetInput.focus();
+        portalMessage.classList.remove("error");
+        portalMessage.textContent = "Preset selected. Press Go to open it through your proxy server.";
+      }
+    });
 
     document.getElementById("portal-form").addEventListener("submit", function(event) {
       event.preventDefault();

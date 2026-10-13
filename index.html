@@ -22,7 +22,7 @@
       <section class="welcome">
         <p class="eyebrow">YOUR PROXY</p>
         <h1>Browse the web.</h1>
-        <p>Enter a URL or search. Your saved proxy server handles the rest.</p>
+        <p>Enter a URL or search. The free proxy transport connects automatically.</p>
       </section>
 
       <section class="search-card" aria-labelledby="search-heading">
@@ -107,8 +107,6 @@
   <script>
     "use strict";
 
-    // The backend is deployed with this project; users never configure it.
-    const PROXY_BACKEND_URL = "https://idkeman-proxy-ryuq.onrender.com";
     const targetInput = document.getElementById("target-input");
     const portalMessage = document.getElementById("portal-message");
 
@@ -141,11 +139,11 @@
 
       targetInput.value = target;
       portalMessage.classList.remove("error");
-      portalMessage.textContent = "Connecting to proxy…";
+      portalMessage.textContent = "Opening proxy…";
 
-      const backend = new URL(PROXY_BACKEND_URL);
-      backend.searchParams.set("url", target);
-      window.location.assign(backend.href);
+      const app = new URL("./public/index.html", window.location.href);
+      app.searchParams.set("url", target);
+      window.location.assign(app.href);
     }
 
     document.getElementById("portal-form").addEventListener("submit", function(event) {

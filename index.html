@@ -244,7 +244,23 @@
       }
     });
 
-    const savedBackend = readSavedServer();
+    let savedBackend = readSavedServer();
+
+    // Older versions could accidentally save a destination such as YouTube
+    // as the backend origin. Clear that corrupted value to stop redirect loops.
+    if (savedBackend) {
+      let backendHost = "";
+      try { backendHost = new URL(savedBackend).hostname.toLowerCase(); } catch {}
+      if (backendHost === "youtube.com" || backendHost.endsWith(".youtube.com")) {
+        try { localStorage.removeItem("proxy-backend-url"); } catch {}
+        savedBackend = "";
+        serverInput.value = "";
+        serverMessage.textContent = "A destination website was saved as the proxy backend. That bad setting was cleared; enter your actual deployed proxy server URL.";
+        serverMessage.classList.add("error");
+        setupPanel.open = true;
+      }
+    }
+
     if (savedBackend) {
       serverInput.value = savedBackend;
       serverMessage.textContent = "Saved.";

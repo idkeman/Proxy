@@ -95,16 +95,6 @@
         <p id="portal-message" class="portal-message" role="status" aria-live="polite">Ready.</p>
       </section>
 
-      <details class="setup-panel">
-        <summary>Connection settings</summary>
-        <p>Only needed on this GitHub Pages front end. Your proxy backend must be deployed separately.</p>
-        <form id="server-form" class="connection-form">
-          <label class="visually-hidden" for="server-input">Proxy server URL</label>
-          <input id="server-input" type="url" placeholder="https://your-proxy-server.example" autocomplete="url">
-          <button class="secondary-button" type="submit">Save</button>
-        </form>
-        <p id="server-message" class="portal-message" role="status" aria-live="polite"></p>
-      </details>
 
       <div class="simple-links">
         <a href="https://github.com/idkeman/Proxy">Source</a>
@@ -117,16 +107,10 @@
   <script>
     "use strict";
 
+    // The backend is deployed with this project; users never configure it.
+    const PROXY_BACKEND_URL = "https://idkeman-proxy-ryuq.onrender.com";
     const targetInput = document.getElementById("target-input");
-    const serverInput = document.getElementById("server-input");
     const portalMessage = document.getElementById("portal-message");
-    const serverMessage = document.getElementById("server-message");
-    const setupPanel = document.querySelector(".setup-panel");
-
-    function readSavedServer() {
-      try { return localStorage.getItem("proxy-backend-url") || ""; }
-      catch { return ""; }
-    }
 
     function normalizeTarget(input) {
       const value = String(input || "").trim();
@@ -145,14 +129,6 @@
       return "https://www.google.com/search?q=" + encodeURIComponent(value);
     }
 
-    function normalizeBackend(input) {
-      const parsed = new URL(String(input || "").trim());
-      if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-        throw new Error("Use an HTTPS proxy server URL.");
-      }
-      return parsed.origin;
-    }
-
     function launchTarget(input) {
       let target;
       try {
@@ -163,39 +139,13 @@
         return;
       }
 
-      // Mirror the exact normalized destination into the visible connection field.
       targetInput.value = target;
-      serverInput.value = target;
-      try { localStorage.setItem("proxy-visible-target", target); } catch {}
-
-      const savedBackend = readSavedServer();
-      if (!savedBackend) {
-        portalMessage.textContent = "The proxy backend has not been configured yet.";
-        portalMessage.classList.add("error");
-        setupPanel.open = true;
-        return;
-      }
-
-      let backendOrigin;
-      try {
-        backendOrigin = normalizeBackend(savedBackend);
-      } catch (error) {
-        portalMessage.textContent = error.message || "Check the saved proxy backend.";
-        portalMessage.classList.add("error");
-        setupPanel.open = true;
-        return;
-      }
-
-      if (new URL(target).origin === backendOrigin) {
-        portalMessage.textContent = "The saved backend is the destination website, not your proxy server. Restore your actual proxy backend URL in Connection settings.";
-        portalMessage.classList.add("error");
-        setupPanel.open = true;
-        return;
-      }
-
       portalMessage.classList.remove("error");
-      portalMessage.textContent = "Opening " + target + "…";
-      window.location.assign(backendOrigin + "/?url=" + encodeURIComponent(target));
+      portalMessage.textContent = "Connecting to proxy…";
+
+      const backend = new URL(PROXY_BACKEND_URL);
+      backend.searchParams.set("url", target);
+      window.location.assign(backend.href);
     }
 
     document.getElementById("portal-form").addEventListener("submit", function(event) {
@@ -211,59 +161,10 @@
       portalMessage.classList.remove("error");
     });
 
-    document.getElementById("server-form").addEventListener("submit", function(event) {
-      event.preventDefault();
-      try {
-        const entered = String(serverInput.value || "").trim();
-        let visibleTarget = "";
-        try { visibleTarget = localStorage.getItem("proxy-visible-target") || ""; } catch {}
-
-        // Go mirrors the destination into this field. Do not let Save replace
-        // the separately stored proxy server with that destination.
-        if (readSavedServer() && visibleTarget && entered === visibleTarget) {
-          serverMessage.textContent = "Destination shown above. Your saved proxy backend was left unchanged.";
-          serverMessage.classList.remove("error");
-          setupPanel.open = false;
-          targetInput.focus();
-          return;
-        }
-
-        const origin = normalizeBackend(entered);
-        if (visibleTarget && entered === visibleTarget && readSavedServer()) {
-          throw new Error("That is the destination URL, not the proxy backend URL.");
-        }
-        localStorage.setItem("proxy-backend-url", origin);
-        serverInput.value = origin;
-        serverMessage.textContent = "Saved.";
-        serverMessage.classList.remove("error");
-        setupPanel.open = false;
-        targetInput.focus();
-      } catch (error) {
-        serverMessage.textContent = error.message || "Enter a valid HTTPS server URL.";
-        serverMessage.classList.add("error");
-      }
-    });
-
-    let savedBackend = readSavedServer();
-
-    // Older versions could accidentally save a destination such as YouTube
-    // as the backend origin. Clear that corrupted value to stop redirect loops.
-    if (savedBackend) {
-      let backendHost = "";
-      try { backendHost = new URL(savedBackend).hostname.toLowerCase(); } catch {}
-      if (backendHost === "youtube.com" || backendHost.endsWith(".youtube.com")) {
-        try { localStorage.removeItem("proxy-backend-url"); } catch {}
-        savedBackend = "";
-        serverInput.value = "";
-        serverMessage.textContent = "A destination website was saved as the proxy backend. That bad setting was cleared; enter your actual deployed proxy server URL.";
-        serverMessage.classList.add("error");
-        setupPanel.open = true;
-      }
-    }
-
-    if (savedBackend) {
-      serverInput.value = savedBackend;
-      serverMessage.textContent = "Saved.";
+    const requestedUrl = new URLSearchParams(location.search).get("url");
+    if (requestedUrl) {
+      targetInput.value = requestedUrl;
+      launchTarget(requestedUrl);
     }
   </script>
 </body>

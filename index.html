@@ -152,37 +152,97 @@
       }
       return parsed.origin;
     }
-function launchTarget(input) {
-  try {
-    // Normalize the destination the user entered.
-    const target = normalizeTarget(input);
+const targetInput = document.getElementById("target-input");
+    const serverInput = document.getElementById("server-input");
+    const portalMessage = document.getElementById("portal-message");
+    const serverMessage = document.getElementById("server-message");
+    const setupPanel = document.querySelector(".setup-panel");
 
-    // Change the actual backend input to the destination.
-    const destination = new URL(target).origin;
-    serverInput.value = destination;
+    function readSavedServer() {
+      try { return localStorage.getItem("proxy-backend-url") || ""; }
+      catch { return ""; }
+    }
 
-    // Persist the changed backend.
-    localStorage.setItem("proxy-backend-url", destination);
+    function normalizeTarget(input) {
+      const value = String(input || "").trim();
+      if (!value) throw new Error("Enter a website address or search phrase.");
 
-    // Update the saved-server status.
-    serverMessage.textContent = "Destination backend updated.";
-    serverMessage.classList.remove("error");
+      try {
+        const parsed = new URL(value);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+      } catch {}
 
-    // Launch using the updated backend.
-    const origin = normalizeBackend(serverInput.value);
+      try {
+        const parsed = new URL("https://" + value);
+        if (parsed.hostname.includes(".") && !parsed.hostname.includes(" ")) return parsed.href;
+      } catch {}
 
-    portalMessage.classList.remove("error");
-    portalMessage.textContent = "Opening…";
+      return "https://www.google.com/search?q=" + encodeURIComponent(value);
+    }
 
-    window.location.assign(
-      origin + "/?url=" + encodeURIComponent(target)
-    );
-  } catch (error) {
-    portalMessage.textContent =
-      error.message || "Could not open the destination.";
-    portalMessage.classList.add("error");
-  }
-}
+    function normalizeBackend(input) {
+      const parsed = new URL(String(input || "").trim());
+      if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+        throw new Error("Use an HTTPS proxy server URL.");
+      }
+      return parsed.origin;
+    }
+
+    function launchTarget(input) {
+      const backend = readSavedServer();
+      if (!backend) {
+        portalMessage.textContent = "Set your proxy server under Connection settings first.";
+        portalMessage.classList.add("error");
+        setupPanel.open = true;
+        serverInput.focus();
+        return;
+      }
+
+      try {
+        const target = normalizeTarget(input);
+        const origin = normalizeBackend(backend);
+        portalMessage.classList.remove("error");
+        portalMessage.textContent = "Opening…";
+        window.location.assign(origin + "/?url=" + encodeURIComponent(target));
+      } catch (error) {
+        portalMessage.textContent = error.message || "Check your settings.";
+        portalMessage.classList.add("error");
+      }
+    }
+
+    document.getElementById("portal-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      launchTarget(targetInput.value);
+    });
+
+    document.getElementById("preset-select").addEventListener("change", function() {
+      if (!this.value) return;
+      targetInput.value = this.value;
+      targetInput.focus();
+      portalMessage.textContent = "Preset selected. Press Go.";
+      portalMessage.classList.remove("error");
+    });
+
+    document.getElementById("server-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      try {
+        const origin = normalizeBackend(serverInput.value);
+        localStorage.setItem("proxy-backend-url", origin);
+        serverInput.value = origin;
+        serverMessage.textContent = "Saved.";
+        serverMessage.classList.remove("error");
+        setupPanel.open = false;
+        targetInput.focus();
+      } catch (error) {
+        serverMessage.textContent = error.message || "Enter a valid HTTPS server URL.";
+        serverMessage.classList.add("error");
+      }
+    });
+
+    serverInput.value = readSavedServer();
+    if (serverInput.value) {
+      serverMessage.textContent = "Saved.";
+    }
   </script>
 </body>
 </html>

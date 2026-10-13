@@ -1,6 +1,6 @@
 "use strict";
 
-const stockSW = new URL("./uv/sw.js", location.href).pathname;
+const stockSW = new URL("./sw.js", location.href).pathname;
 const swAllowedHostnames = ["localhost", "127.0.0.1"];
 
 async function registerSW() {
@@ -12,6 +12,9 @@ async function registerSW() {
     throw new Error("A secure HTTPS connection is required to start the proxy.");
   }
 
-  await navigator.serviceWorker.register(stockSW);
-  await navigator.serviceWorker.ready;
+  await navigator.serviceWorker.register(stockSW, { scope: new URL("./", location.href).pathname });
+  await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Service worker startup timed out. Reload the page and try again.")), 10000))
+  ]);
 }

@@ -45,7 +45,11 @@ jobs:
           curl --silent --show-error --fail https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz | grep -q '"status":"ok"'
           curl --silent --show-error --fail 'https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz?tcp=1' | grep -q '"outboundTcp":true'
           node tests/wisp-smoke.mjs
-      - name: Smoke test the server
+      - name: Install Chromium for real browser test
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Smoke test the server and actual browser
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &
           SERVER_PID=$!
@@ -61,3 +65,4 @@ jobs:
           curl --silent --fail http://127.0.0.1:8080/uv/uv.bundle.js > /dev/null
           curl --silent --fail http://127.0.0.1:8080/baremux/index.js > /dev/null
           curl --silent --fail http://127.0.0.1:8080/epoxy/index.mjs > /dev/null
+          node tests/browser-smoke.mjs

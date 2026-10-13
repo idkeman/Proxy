@@ -33,7 +33,11 @@ try {
     await page.waitForFunction(() => {
       const frame = document.querySelector("#uv-frame");
       try {
-        return frame?.contentDocument?.querySelector("h1")?.textContent?.includes("Example Domain");
+        const doc = frame?.contentDocument;
+        return doc?.readyState === "complete" && (
+          doc.title?.includes("Example Domain") ||
+          doc.body?.innerText?.includes("This domain is for use in documentation examples")
+        );
       } catch {
         return false;
       }

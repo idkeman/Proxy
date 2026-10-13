@@ -12,6 +12,7 @@ const timeout = setTimeout(() => {
 }, 20000);
 
 let connected = false;
+let succeeded = false;
 let response = Buffer.alloc(0);
 ws.on("open", () => console.log("Wisp WebSocket connected."));
 ws.on("error", (error) => {
@@ -24,6 +25,7 @@ ws.on("message", (raw) => {
   if (packet.length < 5) return;
   const type = packet.readUInt8(0);
   const streamId = packet.readUInt32LE(1);
+  if (succeeded) return;
   if (type === 3 && streamId === 0 && !connected) {
     connected = true;
     const hostname = Buffer.from("example.com");
@@ -45,6 +47,7 @@ ws.on("message", (raw) => {
     return;
   }
   if (streamId === 1 && type === 4) {
+    if (succeeded) return;
     console.error("Wisp TCP connect was rejected.");
     clearTimeout(timeout);
     ws.close();

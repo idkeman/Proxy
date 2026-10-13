@@ -40,6 +40,11 @@ jobs:
           NODE
       - name: Test frontend routing behavior
         run: node tests/frontend.test.js
+      - name: Smoke test Supabase TCP transport
+        run: |
+          curl --silent --show-error --fail https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz | grep -q '"status":"ok"'
+          curl --silent --show-error --fail 'https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz?tcp=1' | grep -q '"outboundTcp":true'
+          node tests/wisp-smoke.mjs
       - name: Smoke test the server
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &

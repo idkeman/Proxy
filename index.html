@@ -152,68 +152,42 @@
       }
       return parsed.origin;
     }
-const targetInput = document.getElementById("target-input");
-    const serverInput = document.getElementById("server-input");
-    const portalMessage = document.getElementById("portal-message");
-    const serverMessage = document.getElementById("server-message");
-    const setupPanel = document.querySelector(".setup-panel");
-
-    function readSavedServer() {
-      try { return localStorage.getItem("proxy-backend-url") || ""; }
-      catch { return ""; }
-    }
-
-    function normalizeTarget(input) {
-      const value = String(input || "").trim();
-      if (!value) throw new Error("Enter a website address or search phrase.");
-
-      try {
-        const parsed = new URL(value);
-        if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
-      } catch {}
-
-      try {
-        const parsed = new URL("https://" + value);
-        if (parsed.hostname.includes(".") && !parsed.hostname.includes(" ")) return parsed.href;
-      } catch {}
-
-      return "https://www.google.com/search?q=" + encodeURIComponent(value);
-    }
-
-    function normalizeBackend(input) {
-      const parsed = new URL(String(input || "").trim());
-      if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-        throw new Error("Use an HTTPS proxy server URL.");
-      }
-      return parsed.origin;
-    }
 
     function launchTarget(input) {
+      let target;
       try {
-        const target = normalizeTarget(input);
-
-        // Mirror the destination into the Connection settings input on EVERY Go.
-        targetInput.value = target;
-        serverInput.value = target;
-
-        // Keep the real backend origin stored separately so routing still works.
-        const backend = readSavedServer();
-        if (!backend) {
-          portalMessage.textContent = "The proxy backend has not been configured yet.";
-          portalMessage.classList.add("error");
-          setupPanel.open = true;
-          serverInput.focus();
-          return;
-        }
-
-        const origin = normalizeBackend(backend);
-        portalMessage.classList.remove("error");
-        portalMessage.textContent = "Opening…";
-        window.location.assign(origin + "/?url=" + encodeURIComponent(target));
+        target = normalizeTarget(input);
       } catch (error) {
-        portalMessage.textContent = error.message || "Check your settings.";
+        portalMessage.textContent = error.message || "Enter a valid website address.";
         portalMessage.classList.add("error");
+        return;
       }
+
+      // Mirror the exact normalized destination into the visible connection field.
+      targetInput.value = target;
+      serverInput.value = target;
+
+      const savedBackend = readSavedServer();
+      if (!savedBackend) {
+        portalMessage.textContent = "The proxy backend has not been configured yet.";
+        portalMessage.classList.add("error");
+        setupPanel.open = true;
+        return;
+      }
+
+      let backendOrigin;
+      try {
+        backendOrigin = normalizeBackend(savedBackend);
+      } catch (error) {
+        portalMessage.textContent = error.message || "Check the saved proxy backend.";
+        portalMessage.classList.add("error");
+        setupPanel.open = true;
+        return;
+      }
+
+      portalMessage.classList.remove("error");
+      portalMessage.textContent = "Opening " + target + "…";
+      window.location.assign(backendOrigin + "/?url=" + encodeURIComponent(target));
     }
 
     document.getElementById("portal-form").addEventListener("submit", function(event) {
@@ -245,8 +219,9 @@ const targetInput = document.getElementById("target-input");
       }
     });
 
-    serverInput.value = readSavedServer();
-    if (serverInput.value) {
+    const savedBackend = readSavedServer();
+    if (savedBackend) {
+      serverInput.value = savedBackend;
       serverMessage.textContent = "Saved.";
     }
   </script>

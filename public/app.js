@@ -15,7 +15,8 @@ const serverInput = document.getElementById("server-input");
 const serverForm = document.getElementById("server-form");
 const serverMessage = document.getElementById("server-message");
 const setupPanel = document.querySelector(".setup-panel");
-const connection = new BareMux.BareMuxConnection("./baremux/worker.js");
+const connection = new BareMux.BareMuxConnection(new URL("./baremux/worker.js", location.href).pathname);
+const epoxyTransport = new URL("./epoxy/index.mjs", location.href).pathname;
 
 function getSavedServer() {
   try {
@@ -110,8 +111,8 @@ async function startProxy(rawInput) {
     const wispUrl = "wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/";
 
     const currentTransport = await connection.getTransport();
-    if (currentTransport !== "./epoxy/index.mjs") {
-      await connection.setTransport("./epoxy/index.mjs", [{ wisp: wispUrl }]);
+    if (currentTransport !== epoxyTransport) {
+      await connection.setTransport(epoxyTransport, [{ wisp: wispUrl }]);
     }
 
     address.value = target;

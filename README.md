@@ -1,50 +1,48 @@
 # Proxy
 
-A custom web workspace built around [Ultraviolet](https://github.com/titaniumnetwork-dev/Ultraviolet), with an original landing page, address bar, quick links, and an in-browser view.
+A GitHub Pages frontend for Ultraviolet, using a Supabase Edge Function for the Wisp TCP WebSocket transport.
 
-> **Hosting note:** GitHub Pages is static hosting. It can serve the front page in this repository, but it cannot run the Node.js server or the WebSocket transport Ultraviolet needs. The backend must be deployed separately on a host that permits this type of traffic and supports HTTPS and WebSockets.
+## Deployment
 
-## Deploy the proxy backend
+- Frontend: https://idkeman.github.io/Proxy/
+- Wisp transport: `wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/`
+- Supabase project: `dkwmkvruzebnqlmvwzhy`
 
-1. Fork or use this repository in your GitHub account.
-2. Create a web service on a Node.js hosting provider that permits proxy workloads. This repository includes a `render.yaml` blueprint for Render; you can also deploy manually on a compatible host.
-3. Use Node.js 24 or newer. The build command is `npm install` and the start command is `npm start`.
-4. Wait for the service to finish installing and start. Check `https://YOUR-SERVER/healthz`; a healthy server responds with `{"status":"ok"}`.
-5. The server must provide HTTPS and WebSocket upgrade support. The proxy's Wisp transport uses the `/wisp/` WebSocket path.
+GitHub Pages is static hosting and cannot run the Node server in `src/index.js`. The browser frontend uses the Supabase Edge Function for Wisp TCP streams.
 
-Hosting providers have different acceptable-use policies. Check the provider's rules before deploying a proxy; do not use a service that prohibits open proxies or proxy traffic.
+## Supabase function
 
-## Use the GitHub Pages front page
+Source: `supabase/functions/proxy-wisp/index.ts`
 
-1. Deploy the Node.js backend first, as above.
-2. In this repository, open **Settings → Pages** and publish from the `main` branch and the repository root.
-3. Open the resulting GitHub Pages URL.
-4. Under **Your proxy server**, paste the HTTPS base URL provided by your host, such as `https://your-service.example`, then press **Save server**.
-5. Enter a URL or search phrase and press **Go**. The page will open that destination on your backend, where the Ultraviolet service worker and Wisp transport run.
+Deploy/update from a Supabase CLI environment:
 
-The server URL is stored in local browser storage for the GitHub Pages origin. You can also open the backend URL directly; it serves the same Proxy interface and does not need the Pages front end.
+~~~bash
+supabase functions deploy proxy-wisp --no-verify-jwt
+~~~
 
-## Run locally
+JWT verification is disabled because browser WebSocket APIs cannot attach the usual Authorization header. The function limits destinations to ports 80 and 443, rejects private IPv4 destinations, and limits each WebSocket session to 64 streams. Do not remove those restrictions.
 
-You need Node.js 24 or newer:
+Health check:
+`https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz`
+
+The optional `/healthz?tcp=1` check tests outbound TCP to example.com:80.
+
+## Local Node backend
 
 ~~~bash
 npm install
 npm start
 ~~~
 
-Then open `http://localhost:8080`. Service workers are allowed on localhost for development. For public deployment, use a valid HTTPS domain.
+Then open http://localhost:8080.
 
 ## Project structure
 
-- `index.html` — static GitHub Pages front door configured to route to the deployed backend automatically.
-- `public/` — the actual Proxy interface served by the Node.js app.
-- `src/index.js` — Express server, Ultraviolet assets, and Wisp WebSocket route.
-- `render.yaml` — deployment blueprint example.
-- `package.json` — server and Ultraviolet dependencies.
+- `index.html` — GitHub Pages landing page and presets.
+- `public/` — Ultraviolet app, service worker, and browser assets.
+- `supabase/functions/proxy-wisp/index.ts` — Supabase WebSocket-to-TCP transport.
+- `src/index.js` — original local Node/Express backend.
 
-## Important notes
+## Safety
 
-- Ultraviolet's upstream repository currently says it is no longer actively maintained and has been superseded by [Scramjet](https://github.com/MercuryWorkshop/scramjet). This project uses Ultraviolet because that is what this repository was requested to use.
-- This is a proxy, not an anonymity guarantee. The server operator can observe connection metadata and destination domains. Avoid entering sensitive credentials into a proxy you do not control, and respect the network and website rules that apply to you.
-- The app follows the upstream Ultraviolet-App deployment pattern. See [Ultraviolet-App](https://github.com/titaniumnetwork-dev/Ultraviolet-App) and the [Ultraviolet project](https://github.com/titaniumnetwork-dev/Ultraviolet) for upstream documentation and licensing details.
+This is a web proxy, not an anonymity guarantee. The operator can observe destination domains and connection metadata. Do not enter sensitive credentials. The Edge Function currently supports TCP streams for ports 80 and 443; UDP is not implemented.

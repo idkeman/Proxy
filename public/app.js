@@ -15,7 +15,7 @@ const serverInput = document.getElementById("server-input");
 const serverForm = document.getElementById("server-form");
 const serverMessage = document.getElementById("server-message");
 const setupPanel = document.querySelector(".setup-panel");
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+const connection = new BareMux.BareMuxConnection("./baremux/worker.js");
 
 function getSavedServer() {
   try {
@@ -107,14 +107,11 @@ async function startProxy(rawInput) {
     showMessage("Opening…", false);
     await registerSW();
 
-    const wispUrl =
-      (location.protocol === "https:" ? "wss://" : "ws://") +
-      location.host +
-      "/wisp/";
+    const wispUrl = "wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/";
 
     const currentTransport = await connection.getTransport();
-    if (currentTransport !== "/epoxy/index.mjs") {
-      await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+    if (currentTransport !== "./epoxy/index.mjs") {
+      await connection.setTransport("./epoxy/index.mjs", [{ wisp: wispUrl }]);
     }
 
     address.value = target;
@@ -129,6 +126,12 @@ async function startProxy(rawInput) {
       String(err && err.stack ? err.stack : err)
     );
   }
+}
+
+const initialTarget = new URLSearchParams(location.search).get("url");
+if (initialTarget) {
+  address.value = initialTarget;
+  startProxy(initialTarget);
 }
 
 form.addEventListener("submit", (event) => {

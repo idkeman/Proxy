@@ -166,6 +166,7 @@
       // Mirror the exact normalized destination into the visible connection field.
       targetInput.value = target;
       serverInput.value = target;
+      try { localStorage.setItem("proxy-visible-target", target); } catch {}
 
       const savedBackend = readSavedServer();
       if (!savedBackend) {
@@ -180,6 +181,13 @@
         backendOrigin = normalizeBackend(savedBackend);
       } catch (error) {
         portalMessage.textContent = error.message || "Check the saved proxy backend.";
+        portalMessage.classList.add("error");
+        setupPanel.open = true;
+        return;
+      }
+
+      if (new URL(target).origin === backendOrigin) {
+        portalMessage.textContent = "The saved backend is the destination website, not your proxy server. Restore your actual proxy backend URL in Connection settings.";
         portalMessage.classList.add("error");
         setupPanel.open = true;
         return;
@@ -206,7 +214,24 @@
     document.getElementById("server-form").addEventListener("submit", function(event) {
       event.preventDefault();
       try {
-        const origin = normalizeBackend(serverInput.value);
+        const entered = String(serverInput.value || "").trim();
+        let visibleTarget = "";
+        try { visibleTarget = localStorage.getItem("proxy-visible-target") || ""; } catch {}
+
+        // Go mirrors the destination into this field. Do not let Save replace
+        // the separately stored proxy server with that destination.
+        if (readSavedServer() && visibleTarget && entered === visibleTarget) {
+          serverMessage.textContent = "Destination shown above. Your saved proxy backend was left unchanged.";
+          serverMessage.classList.remove("error");
+          setupPanel.open = false;
+          targetInput.focus();
+          return;
+        }
+
+        const origin = normalizeBackend(entered);
+        if (visibleTarget && entered === visibleTarget && readSavedServer()) {
+          throw new Error("That is the destination URL, not the proxy backend URL.");
+        }
         localStorage.setItem("proxy-backend-url", origin);
         serverInput.value = origin;
         serverMessage.textContent = "Saved.";

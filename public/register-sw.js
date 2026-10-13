@@ -12,6 +12,13 @@ async function registerSW() {
     throw new Error("A secure HTTPS connection is required to start the proxy.");
   }
 
+  // Remove the previous nested registration; it would take precedence for /uv/service/ URLs.
+  const staleScope = new URL("./uv/", location.href).href;
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations
+    .filter((registration) => registration.scope.startsWith(staleScope))
+    .map((registration) => registration.unregister()));
+
   await navigator.serviceWorker.register(stockSW, { scope: new URL("./", location.href).pathname });
   await Promise.race([
     navigator.serviceWorker.ready,

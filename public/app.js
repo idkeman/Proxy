@@ -128,12 +128,6 @@ async function startProxy(rawInput) {
   }
 }
 
-const initialTarget = new URLSearchParams(location.search).get("url");
-if (initialTarget) {
-  address.value = initialTarget;
-  startProxy(initialTarget);
-}
-
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   startProxy(address.value);

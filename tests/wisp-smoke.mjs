@@ -59,6 +59,7 @@ ws.on("message", (raw) => {
     if (response.includes(Buffer.from("HTTP/1."))) {
       try {
         assert.match(response.toString("latin1"), /HTTP\/1\.[01] \d{3}/);
+        succeeded = true;
         console.log("Wisp TCP smoke test passed:", response.toString("latin1").split("\r\n")[0]);
         clearTimeout(timeout);
         ws.close();

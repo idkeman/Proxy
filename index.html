@@ -152,62 +152,37 @@
       }
       return parsed.origin;
     }
+function launchTarget(input) {
+  try {
+    // Normalize the destination the user entered.
+    const target = normalizeTarget(input);
 
-    function launchTarget(input) {
-      const backend = readSavedServer();
-      if (!backend) {
-        portalMessage.textContent = "Set your proxy server under Connection settings first.";
-        portalMessage.classList.add("error");
-        setupPanel.open = true;
-        serverInput.focus();
-        return;
-      }
+    // Change the actual backend input to the destination.
+    const destination = new URL(target).origin;
+    serverInput.value = destination;
 
-      try {
-        const target = normalizeTarget(input);
-        const origin = normalizeBackend(backend);
-        portalMessage.classList.remove("error");
-        portalMessage.textContent = "Opening…";
-        window.location.assign(origin + "/?url=" + encodeURIComponent(target));
-      } catch (error) {
-        portalMessage.textContent = error.message || "Check your settings.";
-        portalMessage.classList.add("error");
-      }
-    }
+    // Persist the changed backend.
+    localStorage.setItem("proxy-backend-url", destination);
 
-    document.getElementById("portal-form").addEventListener("submit", function(event) {
-      event.preventDefault();
-      launchTarget(targetInput.value);
-    });
+    // Update the saved-server status.
+    serverMessage.textContent = "Destination backend updated.";
+    serverMessage.classList.remove("error");
 
-    document.getElementById("preset-select").addEventListener("change", function() {
-      if (!this.value) return;
-      targetInput.value = this.value;
-      targetInput.focus();
-      portalMessage.textContent = "Preset selected. Press Go.";
-      portalMessage.classList.remove("error");
-    });
+    // Launch using the updated backend.
+    const origin = normalizeBackend(serverInput.value);
 
-    document.getElementById("server-form").addEventListener("submit", function(event) {
-      event.preventDefault();
-      try {
-        const origin = normalizeBackend(serverInput.value);
-        localStorage.setItem("proxy-backend-url", origin);
-        serverInput.value = origin;
-        serverMessage.textContent = "Saved.";
-        serverMessage.classList.remove("error");
-        setupPanel.open = false;
-        targetInput.focus();
-      } catch (error) {
-        serverMessage.textContent = error.message || "Enter a valid HTTPS server URL.";
-        serverMessage.classList.add("error");
-      }
-    });
+    portalMessage.classList.remove("error");
+    portalMessage.textContent = "Opening…";
 
-    serverInput.value = readSavedServer();
-    if (serverInput.value) {
-      serverMessage.textContent = "Saved.";
-    }
+    window.location.assign(
+      origin + "/?url=" + encodeURIComponent(target)
+    );
+  } catch (error) {
+    portalMessage.textContent =
+      error.message || "Could not open the destination.";
+    portalMessage.classList.add("error");
+  }
+}
   </script>
 </body>
 </html>

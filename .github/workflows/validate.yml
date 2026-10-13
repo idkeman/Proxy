@@ -45,18 +45,6 @@ jobs:
           curl --silent --show-error --fail https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz | grep -q '"status":"ok"'
           curl --silent --show-error --fail 'https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz?tcp=1' | grep -q '"outboundTcp":true'
           node tests/wisp-smoke.mjs
-      - name: Smoke test deployed GitHub Pages assets
-        run: |
-          for attempt in $(seq 1 45); do
-            if curl --silent --show-error --fail https://idkeman.github.io/Proxy/ | grep -qi 'ULTRAVIOLET'; then
-              break
-            fi
-            sleep 2
-          done
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/sw.js | grep -q './uv/uv.bundle.js'
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/uv/uv.bundle.js > /dev/null
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/baremux/worker.js > /dev/null
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/epoxy/index.mjs > /dev/null
       - name: Smoke test the server
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &

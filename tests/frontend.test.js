@@ -35,6 +35,7 @@ const getElementById = (id) => {
 };
 let currentLocation = "";
 const location = {
+  href: "https://idkeman.github.io/Proxy/",
   search: "",
   assign(url) { currentLocation = url; }
 };

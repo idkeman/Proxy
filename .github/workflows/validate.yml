@@ -66,3 +66,5 @@ jobs:
           curl --silent --fail http://127.0.0.1:8080/baremux/index.js > /dev/null
           curl --silent --fail http://127.0.0.1:8080/epoxy/index.mjs > /dev/null
           node tests/browser-smoke.mjs
+      - name: Troubleshoot the deployed GitHub Pages site in Chromium
+        run: node tests/live-pages-smoke.mjs

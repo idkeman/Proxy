@@ -48,15 +48,15 @@ jobs:
       - name: Smoke test deployed GitHub Pages assets
         run: |
           for attempt in $(seq 1 45); do
-            if curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/index.html | grep -qi 'ULTRAVIOLET'; then
+            if curl --silent --show-error --fail https://idkeman.github.io/Proxy/ | grep -qi 'ULTRAVIOLET'; then
               break
             fi
             sleep 2
           done
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/sw.js | grep -q './uv/uv.bundle.js'
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/uv/uv.bundle.js > /dev/null
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/baremux/worker.js > /dev/null
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/epoxy/index.mjs > /dev/null
+          curl --silent --show-error --fail https://idkeman.github.io/Proxy/sw.js | grep -q './uv/uv.bundle.js'
+          curl --silent --show-error --fail https://idkeman.github.io/Proxy/uv/uv.bundle.js > /dev/null
+          curl --silent --show-error --fail https://idkeman.github.io/Proxy/baremux/worker.js > /dev/null
+          curl --silent --show-error --fail https://idkeman.github.io/Proxy/epoxy/index.mjs > /dev/null
       - name: Smoke test the server
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &

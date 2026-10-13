@@ -19,7 +19,12 @@ function replaceDirectory(source, destination) {
 
 replaceDirectory(uvPath, uvDestination);
 if (customConfig !== null) writeFileSync(customConfigPath, customConfig);
-writeFileSync(resolve(uvDestination, "sw.js"), 'importScripts("./uv.bundle.js");\\nimportScripts("./uv.config.js");\\nimportScripts(__uv$config.sw);\\n');
+writeFileSync(resolve(uvDestination, "sw.js"), [
+  'importScripts("./uv.bundle.js");',
+  'importScripts("./uv.config.js");',
+  'importScripts(__uv$config.sw);',
+  ""
+].join("\n"));
 replaceDirectory(baremuxPath, resolve(root, "public/baremux"));
 replaceDirectory(epoxyPath, resolve(root, "public/epoxy"));
 

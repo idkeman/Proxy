@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 
 const base = "https://idkeman.github.io/Proxy";
 const target = "https://example.com/";
-const url = base + "/public/index.html?url=" + encodeURIComponent(target);
+const url = base + "/?url=" + encodeURIComponent(target);
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 const errors = [];

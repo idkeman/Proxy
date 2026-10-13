@@ -19,9 +19,9 @@ function replaceDirectory(source, destination) {
 
 replaceDirectory(uvPath, uvDestination);
 if (customConfig !== null) writeFileSync(customConfigPath, customConfig);
-writeFileSync(resolve(uvDestination, "sw.js"), [
-  'importScripts("./uv.bundle.js");',
-  'importScripts("./uv.config.js");',
+writeFileSync(resolve(root, "public/sw.js"), [
+  'importScripts("./uv/uv.bundle.js");',
+  'importScripts("./uv/uv.config.js");',
   'importScripts(__uv$config.sw);',
   ""
 ].join("\n"));
@@ -33,7 +33,7 @@ for (const required of [
   "public/uv/uv.client.js",
   "public/uv/uv.handler.js",
   "public/uv/uv.sw.js",
-  "public/uv/sw.js",
+  "public/sw.js",
   "public/baremux/index.js",
   "public/baremux/worker.js",
   "public/epoxy/index.mjs"

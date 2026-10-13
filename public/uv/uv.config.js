@@ -1,5 +1,7 @@
-// Derive the application base path so service-worker assets work on GitHub Pages subpaths.
-const __proxyBase = self.location.pathname.replace("uv/uv.config.js", "");
+// Derive the application base path in both page and service-worker contexts.
+const __proxyBase = typeof document !== "undefined"
+  ? new URL("../", document.currentScript.src).pathname
+  : new URL("../", self.location.href).pathname;
 self.__uv$config = {
   prefix: __proxyBase + "uv/service/",
   encodeUrl: Ultraviolet.codec.xor.encode,

@@ -38,6 +38,20 @@ jobs:
           new Function(scripts[0]);
           console.log('Root frontend inline JavaScript parses successfully.');
           NODE
+      - name: Test frontend routing behavior
+        run: node tests/frontend.test.js
+      - name: Smoke test the deployed backend
+        run: |
+          for attempt in $(seq 1 120); do
+            if curl --silent --show-error --fail https://idkeman-proxy-ryuq.onrender.com/healthz > /tmp/proxy-live-health.json; then
+              break
+            fi
+            sleep 5
+          done
+          grep -q '"status":"ok"' /tmp/proxy-live-health.json
+          curl --silent --show-error --fail https://idkeman-proxy-ryuq.onrender.com/uv/uv.bundle.js > /dev/null
+          curl --silent --show-error --fail https://idkeman-proxy-ryuq.onrender.com/epoxy/index.mjs > /dev/null
+          curl --silent --show-error --fail https://idkeman-proxy-ryuq.onrender.com/baremux/worker.js > /dev/null
       - name: Smoke test the server
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &

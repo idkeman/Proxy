@@ -11,7 +11,7 @@ const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
 
 assert.equal(scripts.length, 1, "frontend should have exactly one inline script");
 assert.equal(html.includes('id="server-input"'), false, "users should not need a backend input");
-assert.equal(html.includes("Connection settings"), false, "manual backend settings should be removed");
+assert.equal(html.includes("onrender.com"), false, "the frontend must not depend on Render");
 
 class FakeElement {
   constructor() {
@@ -58,7 +58,7 @@ submit();
 assert.equal(targetInput.value, "https://snokido.com/");
 assert.equal(
   currentLocation,
-  "https://idkeman-proxy-ryuq.onrender.com/?url=https%3A%2F%2Fsnokido.com%2F",
+  "https://idkeman.github.io/Proxy/public/index.html?url=https%3A%2F%2Fsnokido.com%2F",
   "first URL should be normalized and sent to the backend"
 );
 
@@ -67,10 +67,10 @@ submit();
 assert.equal(targetInput.value, "https://youtube.com/");
 assert.equal(
   currentLocation,
-  "https://idkeman-proxy-ryuq.onrender.com/?url=https%3A%2F%2Fyoutube.com%2F",
+  "https://idkeman.github.io/Proxy/public/index.html?url=https%3A%2F%2Fyoutube.com%2F",
   "second URL should replace the first URL rather than replaying stale state"
 );
-assert.notEqual(currentLocation, "https://idkeman-proxy-ryuq.onrender.com/?url=https%3A%2F%2Fsnokido.com%2F");
+assert.notEqual(currentLocation, "https://idkeman.github.io/Proxy/public/index.html?url=https%3A%2F%2Fsnokido.com%2F");
 
 const preset = getElementById("preset-select");
 preset.value = "https://example.org/";
@@ -79,7 +79,7 @@ assert.equal(targetInput.value, "https://example.org/");
 submit();
 assert.equal(
   currentLocation,
-  "https://idkeman-proxy-ryuq.onrender.com/?url=https%3A%2F%2Fexample.org%2F",
+  "https://idkeman.github.io/Proxy/public/index.html?url=https%3A%2F%2Fexample.org%2F",
   "preset destinations should route through the same backend path"
 );
 

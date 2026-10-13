@@ -26,7 +26,18 @@ jobs:
           node --check public/uv/uv.config.js
       - name: Validate root frontend inline JavaScript
         run: |
-          node --input-type=module -e 'import fs from "node:fs"; const html = fs.readFileSync("index.html", "utf8"); const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(source => source.trim()); if (scripts.length !== 1) throw new Error("Expected exactly one inline frontend script, found " + scripts.length); new Function(scripts[0]); console.log("Root frontend inline JavaScript parses successfully.");'
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+            .map((match) => match[1])
+            .filter((source) => source.trim());
+          if (scripts.length !== 1) {
+            throw new Error('Expected exactly one inline frontend script, found ' + scripts.length);
+          }
+          new Function(scripts[0]);
+          console.log('Root frontend inline JavaScript parses successfully.');
+          NODE
       - name: Smoke test the server
         run: |
           npm start > /tmp/proxy-server.log 2>&1 &

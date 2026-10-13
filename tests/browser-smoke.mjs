@@ -3,9 +3,14 @@ import { chromium } from "playwright";
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 const runtimeErrors = [];
-page.on("pageerror", (error) => runtimeErrors.push(error.stack || error.message));
+const failedRequests = [];
+page.on("pageerror", (error) => runtimeErrors.push("pageerror: " + (error.stack || error.message)));
 page.on("console", (message) => {
   if (message.type() === "error") runtimeErrors.push("console: " + message.text());
+});
+page.on("requestfailed", (request) => failedRequests.push(request.url() + " :: " + request.failure()?.errorText));
+page.on("response", (response) => {
+  if (response.status() >= 400) runtimeErrors.push("HTTP " + response.status() + " " + response.url());
 });
 
 try {
@@ -24,14 +29,29 @@ try {
     throw new Error("Proxy view opened without a valid Ultraviolet frame URL: " + frameUrl);
   }
 
-  await page.waitForFunction(() => {
-    const frame = document.querySelector("#uv-frame");
-    try {
-      return frame?.contentDocument?.querySelector("h1")?.textContent?.includes("Example Domain");
-    } catch {
-      return false;
-    }
-  }, { timeout: 30000 });
+  try {
+    await page.waitForFunction(() => {
+      const frame = document.querySelector("#uv-frame");
+      try {
+        return frame?.contentDocument?.querySelector("h1")?.textContent?.includes("Example Domain");
+      } catch {
+        return false;
+      }
+    }, { timeout: 15000 });
+  } catch {
+    const frameInfo = await page.locator("#uv-frame").evaluate((frame) => {
+      let text = "(cross-origin or unavailable)";
+      let html = "";
+      try {
+        text = frame.contentDocument?.body?.innerText || "(empty body)";
+        html = frame.contentDocument?.documentElement?.outerHTML?.slice(0, 2500) || "";
+      } catch (error) {
+        text = String(error);
+      }
+      return { src: frame.src, readyState: frame.contentDocument?.readyState, text, html };
+    });
+    throw new Error("Target did not render. Frame details: " + JSON.stringify(frameInfo));
+  }
 
   console.log("Browser smoke test passed: example.com rendered through Ultraviolet.");
 } catch (error) {
@@ -42,6 +62,7 @@ try {
   console.error("Status:", status);
   console.error("Details:", details);
   console.error("Runtime errors:", runtimeErrors.join("\n"));
+  console.error("Failed requests:", failedRequests.join("\n"));
   throw error;
 } finally {
   await browser.close();

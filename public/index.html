@@ -6,15 +6,15 @@
     <meta name="theme-color" content="#090d18">
     <meta name="description" content="Simple web proxy powered by Ultraviolet.">
     <title>Proxy</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="/baremux/index.js"></script>
-    <script src="/uv/uv.bundle.js"></script>
-    <script src="/uv/uv.config.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./baremux/index.js"></script>
+    <script src="./uv/uv.bundle.js"></script>
+    <script src="./uv/uv.config.js"></script>
   </head>
   <body>
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="Proxy home">
+        <a class="brand" href="./index.html" aria-label="Proxy home">
           <span class="brand-mark">P<span>.</span></span>
           <span class="brand-name">PROXY</span>
         </a>
@@ -45,7 +45,7 @@
           </div>
         </section>
 
-        <details class="setup-panel">
+        <details class="setup-panel" hidden>
           <summary>Connection settings</summary>
           <p>Only needed when this page is hosted on GitHub Pages. When this page is served by the proxy backend itself, you can ignore this.</p>
           <form id="server-form" class="connection-form">
@@ -81,6 +81,6 @@
 
     <script src="register-sw.js"></script>
     <script src="search.js"></script>
-    <script src="app.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>

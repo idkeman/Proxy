@@ -35,8 +35,9 @@ function setSavedServer(url) {
 }
 
 function setBackendTarget(url) {
-  // This is the actual destination passed from the frontend to this backend.
+  // Set the backend's destination field to the same normalized URL received from the frontend.
   serverInput.value = url;
+  serverInput.setAttribute("data-proxy-target", url);
   try {
     localStorage.setItem("proxy-target-url", url);
   } catch {}

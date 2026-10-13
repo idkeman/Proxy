@@ -189,17 +189,23 @@ const targetInput = document.getElementById("target-input");
     }
 
     function launchTarget(input) {
-      const backend = readSavedServer();
-      if (!backend) {
-        portalMessage.textContent = "Set your proxy server under Connection settings first.";
-        portalMessage.classList.add("error");
-        setupPanel.open = true;
-        serverInput.focus();
-        return;
-      }
-
       try {
         const target = normalizeTarget(input);
+
+        // Mirror the destination into the Connection settings input on EVERY Go.
+        targetInput.value = target;
+        serverInput.value = target;
+
+        // Keep the real backend origin stored separately so routing still works.
+        const backend = readSavedServer();
+        if (!backend) {
+          portalMessage.textContent = "The proxy backend has not been configured yet.";
+          portalMessage.classList.add("error");
+          setupPanel.open = true;
+          serverInput.focus();
+          return;
+        }
+
         const origin = normalizeBackend(backend);
         portalMessage.classList.remove("error");
         portalMessage.textContent = "Opening…";

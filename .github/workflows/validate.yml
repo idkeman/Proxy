@@ -53,7 +53,7 @@ jobs:
             fi
             sleep 2
           done
-          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/uv/sw.js | grep -q 'uv.bundle.js'
+          curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/sw.js | grep -q './uv/uv.bundle.js'
           curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/uv/uv.bundle.js > /dev/null
           curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/baremux/worker.js > /dev/null
           curl --silent --show-error --fail https://idkeman.github.io/Proxy/public/epoxy/index.mjs > /dev/null

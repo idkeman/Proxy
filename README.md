@@ -37,7 +37,7 @@ Then open `http://localhost:8080`. Service workers are allowed on localhost for 
 
 ## Project structure
 
-- `index.html` — static GitHub Pages front door with a backend URL setting.
+- `index.html` — static GitHub Pages front door configured to route to the deployed backend automatically.
 - `public/` — the actual Proxy interface served by the Node.js app.
 - `src/index.js` — Express server, Ultraviolet assets, and Wisp WebSocket route.
 - `render.yaml` — deployment blueprint example.

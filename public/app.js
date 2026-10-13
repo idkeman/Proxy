@@ -84,15 +84,10 @@ function normalizeBackend(raw) {
   return parsed.origin;
 }
 
-async function getBackendOrigin() {
-  const saved = getSavedServer();
-  if (!saved) return location.origin;
-
-  try {
-    return normalizeBackend(saved);
-  } catch {
-    return location.origin;
-  }
+function getBackendOrigin() {
+  // This script only runs on the actual proxy backend. Never redirect a
+  // navigation through a stale saved destination/backend value.
+  return location.origin;
 }
 
 async function startProxy(rawInput) {
@@ -107,16 +102,6 @@ async function startProxy(rawInput) {
   try {
     // Every launch updates the backend's target field from the frontend target.
     setBackendTarget(target);
-
-    const backend = await getBackendOrigin();
-    const isExternalBackend = backend !== location.origin;
-
-    if (isExternalBackend) {
-      const handoff = backend + "/?url=" + encodeURIComponent(target);
-      showMessage("Opening…", false);
-      window.location.assign(handoff);
-      return;
-    }
 
     connectionLabel.textContent = "CONNECTING";
     showMessage("Opening…", false);

@@ -80,7 +80,7 @@ Deno.serve((req: Request) => {
   }
 
   const { socket: ws, response } = Deno.upgradeWebSocket(req);
-  const connections = new Map<number, { conn: Deno.Conn; writes: number; closed: boolean }>();
+  const connections = new Map<number, { conn: Deno.Conn | null; writes: number; closed: boolean; pending: Uint8Array[] }>();
   let shuttingDown = false;
 
   const closeStream = (id: number, reason = 2, notify = true) => {
@@ -88,7 +88,7 @@ Deno.serve((req: Request) => {
     if (!stream) return;
     connections.delete(id);
     stream.closed = true;
-    try { stream.conn.close(); } catch {}
+    try { stream.conn?.close(); } catch {}
     if (notify && ws.readyState === WebSocket.OPEN) {
       try { ws.send(makeClose(id, reason)); } catch {}
     }
@@ -124,10 +124,13 @@ Deno.serve((req: Request) => {
         return;
       }
       try {
+        const stream = { conn: null as Deno.Conn | null, writes: 0, closed: false, pending: [] as Uint8Array[] };
+        connections.set(frame.streamID, stream);
         const ip = await resolvePublicIPv4(host);
         const conn = await Deno.connect({ hostname: ip, port });
-        const stream = { conn, writes: 0, closed: false };
-        connections.set(frame.streamID, stream);
+        if (stream.closed || !connections.has(frame.streamID)) { conn.close(); return; }
+        stream.conn = conn;
+        for (const queued of stream.pending.splice(0)) await writeAll(conn, queued);
         (async () => {
           const buffer = new Uint8Array(16 * 1024);
           try {
@@ -153,6 +156,14 @@ Deno.serve((req: Request) => {
       const stream = connections.get(frame.streamID);
       if (!stream || stream.closed) return;
       try {
+        if (!stream.conn) {
+          if (stream.pending.reduce((sum, part) => sum + part.length, 0) + frame.payload.length > 65536) {
+            closeStream(frame.streamID, 1, true);
+            return;
+          }
+          stream.pending.push(frame.payload);
+          return;
+        }
         await writeAll(stream.conn, frame.payload);
         stream.writes++;
         if (stream.writes >= 127) {

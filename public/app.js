@@ -159,7 +159,20 @@ navForm.addEventListener("submit", (event) => {
 serverForm.addEventListener("submit", (event) => {
   event.preventDefault();
   try {
-    const origin = normalizeBackend(serverInput.value);
+    const entered = String(serverInput.value || "").trim();
+    const currentTarget = getSavedTarget();
+
+    // The backend page mirrors the requested destination into this field.
+    // Never save that destination as the backend server origin.
+    if (currentTarget && entered === currentTarget) {
+      serverMessage.textContent = "This field is showing the destination. The proxy server setting was not changed.";
+      serverMessage.classList.remove("error");
+      setupPanel.removeAttribute("open");
+      address.focus();
+      return;
+    }
+
+    const origin = normalizeBackend(entered);
     if (!setSavedServer(origin)) throw new Error("Could not save the server address.");
     serverInput.value = getSavedTarget() || origin;
     serverMessage.textContent = "Saved.";

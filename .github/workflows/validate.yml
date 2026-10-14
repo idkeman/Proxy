@@ -40,6 +40,8 @@ jobs:
           NODE
       - name: Test frontend routing behavior
         run: node tests/frontend.test.js
+      - name: Test multi-engine compatibility guards
+        run: node tests/engine-compatibility.test.mjs
       - name: Smoke test Supabase TCP transport
         run: |
           curl --silent --show-error --fail https://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/healthz | grep -q '"status":"ok"'

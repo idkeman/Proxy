@@ -11,7 +11,7 @@ const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script
 assert.equal(inlineScripts.length, 1, "frontend should have one inline ES module");
 assert.match(html, /id="searchbar"/, "keep exactly one destination input");
 assert.match(html, /id="preset-select"/, "keep the preset selector");
-assert.match(html, /id="engine-select"/, "include the engine selector");
+assert.equal(html.includes('id="engine-select"'), false, "keep the homepage Scramjet-only");
 assert.equal((html.match(/<input[^>]+type="text"/gi) || []).length, 2,
   "the only text inputs should be the destination bar and hidden Wisp settings input");
 assert.equal(html.includes('id="server-input"'), false, "do not add a second visible backend input");

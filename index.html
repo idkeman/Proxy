@@ -498,7 +498,7 @@
         <label for="engine-select">Proxy engine</label>
         <select id="engine-select" aria-label="Proxy engine">
           <option value="scramjet">Scramjet — configured</option>
-          <option value="ultraviolet">Ultraviolet — backend not deployed</option>
+          <option value="ultraviolet">Ultraviolet — configured</option>
           <option value="rammerhead">Rammerhead — backend not deployed</option>
         </select>
         <p id="engine-compatibility" role="status" aria-live="polite" data-state="ready">Scramjet uses the configured Supabase Wisp endpoint.</p>
@@ -1358,8 +1358,8 @@
             message: 'Scramjet is configured to use the current Supabase Wisp WebSocket endpoint.'
           },
           ultraviolet: {
-            state: 'blocked',
-            message: 'Not available yet: Ultraviolet needs a TOMPHTTP Bare server. The current Supabase Wisp endpoint is a different protocol.'
+            state: 'ready',
+            message: 'Ultraviolet is configured to use the existing Supabase Wisp endpoint through BareMux/Epoxy. Live GitHub Pages navigation is being verified.'
           },
           rammerhead: {
             state: 'blocked',
@@ -1386,12 +1386,20 @@
         updateEngineSelection()
 
         function navigate(raw) {
-          if (getSelectedEngine() !== 'scramjet') {
+          const engine = getSelectedEngine()
+          if (engine === 'rammerhead') {
             updateEngineSelection()
             return
           }
           const url = toUrl(raw)
           if (!url) return
+          if (engine === 'ultraviolet') {
+            // The existing UV app uses BareMux/Epoxy over the deployed Wisp endpoint.
+            // Pass the destination through its query parameter so presets and the
+            // single home-page URL bar share the exact same normalized URL.
+            window.location.assign(BASE + 'public/index.html?url=' + encodeURIComponent(url))
+            return
+          }
           showBrowser(sj.encodeUrl(url))
         }
 
@@ -1405,7 +1413,7 @@
             bar.focus()
             return
           }
-          if (getSelectedEngine() !== 'scramjet') {
+          if (getSelectedEngine() === 'rammerhead') {
             updateEngineSelection()
             return
           }

@@ -15,13 +15,15 @@ assert.match(html, /id="engine-select"/, "include the engine selector");
 for (const engine of ["scramjet", "ultraviolet", "rammerhead"]) {
   assert.match(html, new RegExp('value="' + engine + '"'), "selector should include " + engine);
 }
-assert.match(html, /TOMPHTTP Bare server/i, "Ultraviolet must explain its required protocol");
+assert.match(html, /Ultraviolet is configured to use the existing Supabase Wisp endpoint/i,
+  "Ultraviolet must report its configured transport");
 assert.match(html, /own running Node\.js server/i, "Rammerhead must explain its required backend");
-assert.match(html, /getSelectedEngine\(\) !== 'scramjet'/, "unavailable engines must not navigate");
+assert.match(html, /getSelectedEngine\(\) === 'rammerhead'/, "unavailable Rammerhead must not navigate");
+assert.match(html, /public\/index\.html\?url=/, "Ultraviolet must route the normalized target to its existing app");
 assert.match(config, /prefix:.*uv\/service\//, "Ultraviolet assets are configured locally");
 assert.match(wisp, /Wisp WebSocket endpoint|Deno\.upgradeWebSocket/, "Supabase function is a Wisp WebSocket service");
-assert.match(server, /wisp\.routeRequest/, "Node dev server currently routes Wisp, not Bare or Rammerhead");
-assert.match(docs, /Blocked; do not route traffic to Wisp/);
+assert.match(server, /wisp\.routeRequest/, "Node dev server routes Wisp transport");
+assert.match(docs, /Configured; live GitHub Pages target-site verification pending/);
 assert.match(docs, /Blocked; needs a Node\.js host/);
 
-console.log("Engine compatibility tests passed: single URL bar, presets, selector, and backend mismatch guards.");
+console.log("Engine compatibility tests passed: single URL bar, presets, and guarded engine routing.");

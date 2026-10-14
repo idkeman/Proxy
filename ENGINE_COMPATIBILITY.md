@@ -6,8 +6,8 @@ This repository intentionally does not report an engine as available merely beca
 
 | Engine | Frontend assets | Required backend | Current backend match | Status |
 | --- | --- | --- | --- | --- |
-| Scramjet | Bundled in `scramjet-engine/` | Scramjet controller + BareMux transport + Wisp-compatible transport endpoint | `proxy-wisp` is a Wisp WebSocket TCP relay and is what the current Scramjet page configures | Configured; live browse flow still needs a real target-site test |
-| Ultraviolet | Bundled under `public/uv/`; app at `public/index.html` | Ultraviolet service worker + BareMux/Epoxy transport configured for Wisp | The existing UV app already selects Epoxy and connects to the same Supabase Wisp endpoint; the local Chromium browser test passes its target-site navigation | Configured; live GitHub Pages target-site verification pending |
+| Scramjet | Bundled in `scramjet-engine/` | Scramjet controller + BareMux transport + Wisp-compatible transport endpoint | `proxy-wisp` is a Wisp WebSocket TCP relay and is what the current Scramjet page configures | Configured; live GitHub Pages Chromium test passed |
+| Ultraviolet | Bundled under `public/uv/`; app at `public/index.html` | Ultraviolet service worker + BareMux/Epoxy transport configured for Wisp | The existing UV app already selects Epoxy and connects to the same Supabase Wisp endpoint; the local Chromium browser test passes its target-site navigation | Configured; live GitHub Pages Chromium test passed |
 | Rammerhead | Not integrated as a browser-side engine | A separately running Rammerhead Node.js application with its own session/proxy routes | `proxy-wisp` is not a Rammerhead server | Blocked; needs a Node.js host |
 
 ## Free-tier deployment implications
@@ -23,7 +23,9 @@ The homepage keeps one destination input and all existing preset options. The en
 
 ## Verification checklist
 
-Before changing an engine's status to available:
+Verified on 2026-10-14: the CI Chromium test successfully navigated to `https://example.com/` through both the deployed Scramjet route and the engine selector's Ultraviolet route. This verifies those two engines against the current deployed Wisp endpoint; it does not verify Rammerhead.
+
+Before changing another engine's status to available:
 
 1. Confirm its deployed endpoint and expected protocol.
 2. Run the endpoint's health/manifest check.

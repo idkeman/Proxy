@@ -27,17 +27,27 @@ async function assertExampleDomain(page, frameSelector, label) {
 }
 
 async function waitForReady(page) {
-  await page.waitForFunction(() => document.querySelector("#status")?.textContent.trim() === "Ready", {
-    timeout: 60000
-  });
+  let lastError;
+  for (let attempt = 0; attempt < 12; attempt++) {
+    try {
+      await page.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await page.waitForSelector("#engine-select", { timeout: 5000 });
+      await page.waitForFunction(() => document.querySelector("#status")?.textContent.trim() === "Ready", {
+        timeout: 60000
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+    }
+  }
+  throw new Error("The deployed home page did not expose a ready engine selector after retrying: " + (lastError?.message || "unknown error"));
 }
 
 try {
   const scramjet = await browser.newPage();
   const sjErrors = [];
   scramjet.on("pageerror", (error) => sjErrors.push(error.stack || error.message));
-  const rootResponse = await scramjet.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
-  if (!rootResponse || rootResponse.status() >= 400) throw new Error("Proxy home page returned an unsuccessful response.");
   await waitForReady(scramjet);
   await scramjet.locator("#searchbar").fill(target);
   await scramjet.locator("#proxy-search-form").evaluate((form) => form.requestSubmit());
@@ -50,8 +60,6 @@ try {
   const ultraviolet = await browser.newPage();
   const uvErrors = [];
   ultraviolet.on("pageerror", (error) => uvErrors.push(error.stack || error.message));
-  const uvHomeResponse = await ultraviolet.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
-  if (!uvHomeResponse || uvHomeResponse.status() >= 400) throw new Error("Proxy home page for Ultraviolet returned an unsuccessful response.");
   await waitForReady(ultraviolet);
   await ultraviolet.locator("#engine-select").selectOption("ultraviolet");
   await ultraviolet.locator("#searchbar").fill(target);

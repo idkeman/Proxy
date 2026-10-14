@@ -779,7 +779,7 @@
       let pendingTransport = DEFAULT_TRANSPORT // what's selected in UI but not yet saved
 
       function transportPath(method) {
-        return method === 'epoxy' ? BASE + 'transport/epoxy.mjs' : BASE + 'transport/libcurl.mjs'
+        return 'https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs'
       }
 
       function getSavedTransport() {

@@ -405,6 +405,38 @@
         border-radius: 0 2px 2px 0;
       }
     #wisp-panel { display:none !important; } #preset-select { width:min(600px,88vw); margin-top:14px; padding:12px 16px; border:1px solid rgba(255,255,255,.16); border-radius:12px; background:#121722; color:#fff; font:inherit; }
+
+      /* ── Multi-engine selector ───────────────────────────────────── */
+      #engine-settings {
+        width: min(600px, 88vw);
+        margin-top: 0.75rem;
+        text-align: left;
+        color: #c9d5e5;
+        font-size: 0.82rem;
+      }
+      #engine-settings label {
+        display: block;
+        margin: 0 0 0.4rem 0.25rem;
+        color: #dcecff;
+        font-weight: 600;
+      }
+      #engine-select {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid rgba(126,200,255,0.35);
+        border-radius: 12px;
+        background: #121722;
+        color: #fff;
+        font: inherit;
+      }
+      #engine-compatibility {
+        margin: 0.45rem 0.25rem 0;
+        line-height: 1.45;
+        color: #b9c8da;
+      }
+      #engine-compatibility[data-state="ready"] { color: #86efac; }
+      #engine-compatibility[data-state="blocked"] { color: #fbbf24; }
+
 </style>
   </head>
   <body>
@@ -461,6 +493,17 @@
 <optgroup label="Proxies"><option value="https://truffled.lol/">Truffled</option><option value="https://kyro.li/">Kyro</option></optgroup>
 <optgroup label="My own creations!"><option value="https://idkeman.github.io/snake-replica/">Snake Replica</option><option value="https://bit.ly/1mp0st3">1mp0st3</option><option value="https://idkeman.github.io/Towerd/">Towerd</option><option value="https://idkeman.github.io/Game-making/">Game-making</option><option value="https://idkeman.github.io/CaseClicker/">CaseClicker</option><option value="https://idkeman.github.io/Pokemon-cheat-sheet/">Pokémon Cheat Sheet</option><option value="https://idkeman.github.io/bitburner/">Bitburner</option></optgroup>
 </select>
+      <!-- Engine selection changes the active engine only when its backend is configured. -->
+      <div id="engine-settings">
+        <label for="engine-select">Proxy engine</label>
+        <select id="engine-select" aria-label="Proxy engine">
+          <option value="scramjet">Scramjet — configured</option>
+          <option value="ultraviolet">Ultraviolet — configured</option>
+          <option value="rammerhead">Rammerhead — backend not deployed</option>
+        </select>
+        <p id="engine-compatibility" role="status" aria-live="polite" data-state="ready">Scramjet uses the configured Supabase Wisp endpoint.</p>
+      </div>
+
       <p id="status">Initialising…</p>
 
       <!-- WISP server settings panel -->
@@ -1307,9 +1350,56 @@
         startConfetti()
         setTimeout(showReleaseModal, 2000)
 
+        const engineSelect = document.getElementById('engine-select')
+        const engineCompatibility = document.getElementById('engine-compatibility')
+        const ENGINE_INFO = {
+          scramjet: {
+            state: 'ready',
+            message: 'Scramjet is configured to use the current Supabase Wisp WebSocket endpoint.'
+          },
+          ultraviolet: {
+            state: 'ready',
+            message: 'Ultraviolet is configured to use the existing Supabase Wisp endpoint through BareMux/Epoxy. Live GitHub Pages navigation is being verified.'
+          },
+          rammerhead: {
+            state: 'blocked',
+            message: 'Not available yet: Rammerhead needs its own running Node.js server. The current Wisp endpoint cannot serve as its backend.'
+          }
+        }
+        function getSelectedEngine() {
+          return engineSelect.value || 'scramjet'
+        }
+        function updateEngineSelection() {
+          const engine = getSelectedEngine()
+          const info = ENGINE_INFO[engine] || ENGINE_INFO.scramjet
+          engineCompatibility.textContent = info.message
+          engineCompatibility.dataset.state = info.state
+          try { localStorage.setItem('proxy-engine', engine) } catch {}
+          if (info.state === 'blocked') status.textContent = info.message
+          else if (status.textContent === ENGINE_INFO.ultraviolet.message || status.textContent === ENGINE_INFO.rammerhead.message) status.textContent = 'Ready'
+        }
+        try {
+          const savedEngine = localStorage.getItem('proxy-engine')
+          if (savedEngine && ENGINE_INFO[savedEngine]) engineSelect.value = savedEngine
+        } catch {}
+        engineSelect.addEventListener('change', updateEngineSelection)
+        updateEngineSelection()
+
         function navigate(raw) {
+          const engine = getSelectedEngine()
+          if (engine === 'rammerhead') {
+            updateEngineSelection()
+            return
+          }
           const url = toUrl(raw)
           if (!url) return
+          if (engine === 'ultraviolet') {
+            // The existing UV app uses BareMux/Epoxy over the deployed Wisp endpoint.
+            // Pass the destination through its query parameter so presets and the
+            // single home-page URL bar share the exact same normalized URL.
+            window.location.assign(BASE + 'public/index.html?url=' + encodeURIComponent(url))
+            return
+          }
           showBrowser(sj.encodeUrl(url))
         }
 
@@ -1321,6 +1411,10 @@
             status.style.color = '#f87171'
             status.textContent = 'Enter a valid website address or search term.'
             bar.focus()
+            return
+          }
+          if (getSelectedEngine() === 'rammerhead') {
+            updateEngineSelection()
             return
           }
           // Keep the one visible input synchronized with the exact destination.

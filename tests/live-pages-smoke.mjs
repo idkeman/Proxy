@@ -1,65 +1,63 @@
 import { chromium } from "playwright";
 
-const base = "https://idkeman.github.io/Proxy";
+const base = "https://idkeman.github.io/Proxy/";
 const target = "https://example.com/";
-const url = base + "/?url=" + encodeURIComponent(target);
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
-const errors = [];
-const failed = [];
-page.on("pageerror", (error) => errors.push(error.stack || error.message));
-page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
-page.on("requestfailed", (request) => failed.push(request.url() + " :: " + request.failure()?.errorText));
-page.on("response", (response) => { if (response.status() >= 400) errors.push("HTTP " + response.status() + " " + response.url()); });
 
-try {
-  // Allow Pages deployment to finish if this test was triggered by a fresh push.
-  let loaded = false;
-  for (let attempt = 0; attempt < 12; attempt++) {
-    try {
-      const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
-      if (response && response.status() < 500) { loaded = true; break; }
-    } catch (error) {
-      errors.push("navigation attempt " + (attempt + 1) + ": " + error.message);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10000));
-  }
-  if (!loaded) throw new Error("Live GitHub Pages app did not become reachable.");
-
-  await page.waitForFunction(() => {
-    const view = document.querySelector("#browser-view");
-    return view && !view.hidden;
-  }, { timeout: 30000 });
-
-  await page.waitForFunction(() => {
-    const frame = document.querySelector("#uv-frame");
+async function assertExampleDomain(page, frameSelector, label) {
+  await page.waitForFunction((selector) => {
+    const frame = document.querySelector(selector);
     try {
       const doc = frame?.contentDocument;
       return doc?.readyState === "complete" && (
         doc.title?.includes("Example Domain") ||
         doc.body?.innerText?.includes("This domain is for use in documentation examples")
       );
-    } catch { return false; }
-  }, { timeout: 45000 });
+    } catch {
+      return false;
+    }
+  }, frameSelector, { timeout: 60000 }).catch(async (error) => {
+    const details = await page.locator(frameSelector).evaluate((frame) => {
+      let body = "(unavailable)";
+      try { body = frame.contentDocument?.body?.innerText || "(empty)"; } catch (e) { body = String(e); }
+      return { src: frame.src, readyState: frame.contentDocument?.readyState, body: body.slice(0, 1200) };
+    }).catch(() => null);
+    throw new Error(label + " did not render Example Domain: " + JSON.stringify(details) + "; " + error.message);
+  });
+}
 
-  console.log("LIVE PAGES TEST PASSED: example.com rendered through the deployed proxy.");
+try {
+  const scramjet = await browser.newPage();
+  const sjErrors = [];
+  scramjet.on("pageerror", (error) => sjErrors.push(error.stack || error.message));
+  const rootResponse = await scramjet.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+  if (!rootResponse || rootResponse.status() >= 400) throw new Error("Scramjet home page returned an unsuccessful response.");
+  await scramjet.waitForFunction(() => document.querySelector("#status")?.textContent.trim() === "Ready", { timeout: 60000 });
+  await scramjet.locator("#searchbar").fill(target);
+  await scramjet.locator("#proxy-search-form").evaluate((form) => form.requestSubmit());
+  await scramjet.waitForFunction(() => document.querySelector("#browser")?.classList.contains("visible"), { timeout: 15000 });
+  await assertExampleDomain(scramjet, "#browser", "Scramjet/Wisp");
+  if (sjErrors.length) throw new Error("Scramjet page errors: " + sjErrors.join("\n"));
+  console.log("LIVE TEST PASSED: Scramjet rendered example.com through the deployed Wisp path.");
+  await scramjet.close();
+
+  const ultraviolet = await browser.newPage();
+  const uvErrors = [];
+  ultraviolet.on("pageerror", (error) => uvErrors.push(error.stack || error.message));
+  const uvResponse = await ultraviolet.goto(base + "public/index.html?url=" + encodeURIComponent(target), {
+    waitUntil: "domcontentloaded",
+    timeout: 30000
+  });
+  if (!uvResponse || uvResponse.status() >= 400) throw new Error("Ultraviolet page returned an unsuccessful response.");
+  await ultraviolet.waitForFunction(() => {
+    const view = document.querySelector("#browser-view");
+    return view && !view.hidden;
+  }, { timeout: 30000 });
+  await assertExampleDomain(ultraviolet, "#uv-frame", "Ultraviolet/Wisp");
+  if (uvErrors.length) throw new Error("Ultraviolet page errors: " + uvErrors.join("\n"));
+  console.log("LIVE TEST PASSED: Ultraviolet rendered example.com through the deployed Wisp path.");
 } catch (error) {
-  const info = await page.locator("#uv-frame").evaluate((frame) => {
-    let text = "(cross-origin or unavailable)";
-    let html = "";
-    try {
-      text = frame.contentDocument?.body?.innerText || "(empty body)";
-      html = frame.contentDocument?.documentElement?.outerHTML?.slice(0, 1800) || "";
-    } catch (e) { text = String(e); }
-    return { src: frame.src, readyState: frame.contentDocument?.readyState, text, html };
-  }).catch(() => null);
-  console.error("LIVE PAGES TEST FAILED");
-  console.error("URL:", page.url());
-  console.error("Status:", await page.locator("#uv-error").textContent().catch(() => "(unavailable)"));
-  console.error("Details:", await page.locator("#uv-error-code").textContent().catch(() => "(unavailable)"));
-  console.error("Frame:", JSON.stringify(info));
-  console.error("Errors:", errors.join("\\n"));
-  console.error("Failed requests:", failed.join("\\n"));
+  console.error("LIVE ENGINE TEST FAILED:", error.stack || error.message);
   throw error;
 } finally {
   await browser.close();

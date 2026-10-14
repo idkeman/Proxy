@@ -1,0 +1,1 @@
+WISP URL: wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/

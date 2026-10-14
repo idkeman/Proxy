@@ -23,7 +23,7 @@ assert.match(html, /public\/index\.html\?url=/, "Ultraviolet must route the norm
 assert.match(config, /prefix:.*uv\/service\//, "Ultraviolet assets are configured locally");
 assert.match(wisp, /Wisp WebSocket endpoint|Deno\.upgradeWebSocket/, "Supabase function is a Wisp WebSocket service");
 assert.match(server, /wisp\.routeRequest/, "Node dev server routes Wisp transport");
-assert.match(docs, /Configured; live GitHub Pages target-site verification pending/);
+assert.match(docs, /Configured; live GitHub Pages Chromium test passed/);
 assert.match(docs, /Blocked; needs a Node\.js host/);
 
 console.log("Engine compatibility tests passed: single URL bar, presets, and guarded engine routing.");

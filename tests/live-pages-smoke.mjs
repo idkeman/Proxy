@@ -31,7 +31,7 @@ async function waitForReady(page) {
   for (let attempt = 0; attempt < 12; attempt++) {
     try {
       await page.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await page.waitForSelector("#engine-select", { timeout: 5000 });
+      await page.waitForSelector("#searchbar", { timeout: 5000 });
       await page.waitForFunction(() => document.querySelector("#status")?.textContent.trim() === "Ready", {
         timeout: 60000
       });
@@ -41,7 +41,7 @@ async function waitForReady(page) {
       await new Promise((resolve) => setTimeout(resolve, 10000));
     }
   }
-  throw new Error("The deployed home page did not expose a ready engine selector after retrying: " + (lastError?.message || "unknown error"));
+  throw new Error("The deployed Scramjet homepage did not become ready after retrying: " + (lastError?.message || "unknown error"));
 }
 
 try {
@@ -57,21 +57,6 @@ try {
   console.log("LIVE TEST PASSED: Scramjet rendered example.com through the deployed Wisp path.");
   await scramjet.close();
 
-  const ultraviolet = await browser.newPage();
-  const uvErrors = [];
-  ultraviolet.on("pageerror", (error) => uvErrors.push(error.stack || error.message));
-  await waitForReady(ultraviolet);
-  await ultraviolet.locator("#engine-select").selectOption("ultraviolet");
-  await ultraviolet.locator("#searchbar").fill(target);
-  await ultraviolet.locator("#proxy-search-form").evaluate((form) => form.requestSubmit());
-  await ultraviolet.waitForURL((url) => url.pathname.endsWith("/public/index.html") && url.searchParams.has("url"), { timeout: 15000 });
-  await ultraviolet.waitForFunction(() => {
-    const view = document.querySelector("#browser-view");
-    return view && !view.hidden;
-  }, { timeout: 30000 });
-  await assertExampleDomain(ultraviolet, "#uv-frame", "Ultraviolet/Wisp");
-  if (uvErrors.length) throw new Error("Ultraviolet page errors: " + uvErrors.join("\n"));
-  console.log("LIVE TEST PASSED: the engine selector launched Ultraviolet and it rendered example.com through Wisp.");
 } catch (error) {
   console.error("LIVE ENGINE TEST FAILED:", error.stack || error.message);
   throw error;

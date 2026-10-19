@@ -338,6 +338,7 @@
         backdrop-filter: blur(8px);
       }
       #fab-bar.visible { display: flex; }
+      #fab-bar.hotkey-hidden { display: none !important; }
 
       .fab-btn {
         width: 40px;
@@ -582,6 +583,16 @@
       const homeFab = document.getElementById('home-fab')
       const fabBar = document.getElementById('fab-bar')
       const reloadFab = document.getElementById('reload-fab')
+      // Ctrl+P toggles the floating reload/home controls while browsing.
+      // Prevent the browser's Print dialog from intercepting this shortcut.
+      document.addEventListener('keydown', event => {
+        if (event.ctrlKey && !event.altKey && !event.metaKey && event.key.toLowerCase() === 'p') {
+          event.preventDefault()
+          fabBar.classList.toggle('hotkey-hidden')
+          const hidden = fabBar.classList.contains('hotkey-hidden')
+          console.info('[Proxy] Floating controls ' + (hidden ? 'hidden' : 'shown') + ' (Ctrl+P)')
+        }
+      })
       const reloadIcon = document.getElementById('reload-icon')
       const reloadToast = document.getElementById('reload-toast')
       const loadBar = document.getElementById('load-bar')

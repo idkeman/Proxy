@@ -1379,6 +1379,12 @@
             e.target.value = ''
           }
         })
+        // Direct destination launch from The Hub's main search screen.
+        const requestedDestination = new URLSearchParams(location.search).get('url')
+        if (requestedDestination) {
+          bar.value = requestedDestination
+          searchForm.requestSubmit()
+        }
 
       } catch (err) {
         status.style.color = '#f87171'

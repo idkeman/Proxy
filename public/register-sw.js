@@ -1,8 +1,7 @@
 "use strict";
 
-const stockSW = new URL("./sw.js", location.href).pathname;
-const appScope = new URL("./", location.href);
-const repoScope = new URL("../", appScope);
+const rootSW = new URL("../sw.js", location.href).pathname;
+const repoScope = new URL("../", location.href);
 const swAllowedHostnames = ["localhost", "127.0.0.1"];
 
 async function registerSW() {
@@ -14,57 +13,69 @@ async function registerSW() {
     throw new Error("A secure HTTPS connection is required to start the proxy.");
   }
 
-  // Remove the legacy Scramjet worker registered at /Proxy/ and any old
-  // nested worker. Keep only the current Ultraviolet scope.
+  // Keep the existing /Proxy/ registration and replace its script in-place.
+  // Remove only stale nested registrations from earlier migration attempts.
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations
-    .filter((registration) => {
-      const scope = new URL(registration.scope);
+    .filter((item) => {
+      const scope = new URL(item.scope);
       return scope.origin === location.origin
         && scope.pathname.startsWith(repoScope.pathname)
-        && scope.pathname !== appScope.pathname;
+        && scope.pathname !== repoScope.pathname;
     })
-    .map((registration) => registration.unregister()));
+    .map((item) => item.unregister()));
 
-  const registration = await navigator.serviceWorker.register(stockSW, {
-    scope: appScope.pathname,
+  const registration = await navigator.serviceWorker.register(rootSW, {
+    scope: repoScope.pathname,
     updateViaCache: "none"
   });
 
-  await Promise.race([
-    navigator.serviceWorker.ready,
-    new Promise((_, reject) => setTimeout(
-      () => reject(new Error("Ultraviolet service worker startup timed out. Reload the page and try again.")),
-      15000
-    ))
-  ]);
-
-  // navigator.serviceWorker.ready only means a worker is active. Verify that
-  // the active page controller is the Ultraviolet worker for this app path.
-  const expectedWorker = new URL(stockSW, location.href).href;
+  const expectedWorker = new URL(rootSW, location.href).href;
   const hasUltravioletControl = () =>
     navigator.serviceWorker.controller?.scriptURL === expectedWorker;
 
-  if (!hasUltravioletControl()) {
-    await Promise.race([
-      new Promise((resolve) => {
-        const onChange = () => {
-          if (hasUltravioletControl()) {
-            navigator.serviceWorker.removeEventListener("controllerchange", onChange);
-            resolve();
-          }
-        };
-        navigator.serviceWorker.addEventListener("controllerchange", onChange);
-        onChange();
-      }),
-      new Promise((_, reject) => setTimeout(
-        () => reject(new Error("The Ultraviolet service worker installed but did not take control. Close other Proxy tabs, reload, and try again.")),
-        10000
-      ))
-    ]);
-  }
+  // Wait for this exact root-scoped registration, not the generic ready
+  // promise, which can resolve to an older controller's registration.
+  await Promise.race([
+    (async () => {
+      if (registration.installing) {
+        await new Promise((resolve, reject) => {
+          const worker = registration.installing;
+          worker.addEventListener("statechange", () => {
+            if (worker.state === "activated") resolve();
+            if (worker.state === "redundant") reject(new Error("The Ultraviolet worker became redundant during installation."));
+          });
+        });
+      } else if (registration.waiting) {
+        throw new Error("Ultraviolet is waiting to activate. Close other Proxy tabs and reload.");
+      } else if (!registration.active) {
+        throw new Error("The Ultraviolet service worker did not become active.");
+      }
 
-  if (!hasUltravioletControl() || !registration.active) {
-    throw new Error("Ultraviolet is not controlling this page. Reload the Proxy page and try again.");
+      if (!hasUltravioletControl()) {
+        await new Promise((resolve, reject) => {
+          const onChange = () => {
+            if (hasUltravioletControl()) {
+              navigator.serviceWorker.removeEventListener("controllerchange", onChange);
+              resolve();
+            }
+          };
+          navigator.serviceWorker.addEventListener("controllerchange", onChange);
+          onChange();
+          setTimeout(() => {
+            navigator.serviceWorker.removeEventListener("controllerchange", onChange);
+            reject(new Error("Ultraviolet is active at /Proxy/ but has not taken control of this tab. Close every Proxy tab, then reopen the site."));
+          }, 12000);
+        });
+      }
+    })(),
+    new Promise((_, reject) => setTimeout(
+      () => reject(new Error("Ultraviolet service worker startup timed out. Close every Proxy tab and reload.")),
+      20000
+    ))
+  ]);
+
+  if (!hasUltravioletControl() || !registration.active || registration.active.scriptURL !== expectedWorker) {
+    throw new Error("The /Proxy/ service worker is not the Ultraviolet worker. Close every Proxy tab and reload.");
   }
 }

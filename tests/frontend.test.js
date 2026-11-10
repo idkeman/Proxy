@@ -21,6 +21,11 @@ assert.match(app, /__uv\$config\.prefix \+ __uv\$config\.encodeUrl\(target\)/, "
 assert.match(app, /presetSelect\.addEventListener\("change"/, "presets must use the normal destination submission path");
 assert.match(app, /proxy-wisp/, "retain the existing Supabase Wisp endpoint");
 assert.match(sw, /uv\.bundle\.js/, "service worker must route requests through Ultraviolet");
+assert.doesNotMatch(legacySw, /scramjet/i, "root-scoped legacy worker must no longer load Scramjet");
+assert.match(legacySw, /self\\.registration\\.unregister\\(\\)/, "legacy root worker must unregister itself");
+assert.match(registration, /scope\\.pathname\\.startsWith\\(repoScope\\.pathname\\)/, "registration must clean up old workers inside this repository path");
+assert.match(registration, /controller\\?\\.scriptURL === expectedWorker/, "startup must verify that Ultraviolet controls the page");
+assert.match(registration, /updateViaCache: "none"/, "service-worker updates must bypass stale script caches");
 assert.match(config, /uv\/service\//, "Ultraviolet service prefix must remain configured");
 assert.equal(root.toLowerCase().includes("scramjet"), false, "root entry point must not load Scramjet");
 

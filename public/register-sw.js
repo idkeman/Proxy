@@ -1,9 +1,13 @@
 "use strict";
 
-// Versioned script URL forces browsers with an older Scramjet worker to fetch
-// this exact Ultraviolet worker instead of reusing a stale registration.
-const rootSW = new URL("../sw.js?uv-build=20261110b", location.href).href;
-const repoScope = new URL("../", location.href);
+// Resolve paths from this script's URL, not location.href (the document URL).
+// On GitHub Pages this script is /Proxy/register-sw.js only if moved; currently
+// it is /Proxy/register-sw.js? Actually served from /Proxy/register-sw.js
+// through the app's public directory at /Proxy/register-sw.js.
+const registrationScriptUrl = document.currentScript?.src || new URL("./register-sw.js", location.href).href;
+const appBase = new URL("./", registrationScriptUrl);
+const rootSW = new URL("../sw.js?uv-build=20261110d", registrationScriptUrl).href;
+const repoScope = new URL("../", registrationScriptUrl);
 const swAllowedHostnames = ["localhost", "127.0.0.1"];
 
 function pingUltraviolet(worker) {
@@ -44,13 +48,10 @@ async function registerSW() {
     throw new Error("A secure HTTPS connection is required to start the proxy.");
   }
 
-  // Purge every older registration in this repository scope, including the
-  // original root Scramjet registration. Its active worker may control this
-  // tab until the replacement activates and calls clients.claim().
   const registrations = await navigator.serviceWorker.getRegistrations();
   const oldRepoRegistrations = registrations.filter((item) => {
     const scope = new URL(item.scope);
-    return scope.origin === location.origin
+    return scope.origin === repoScope.origin
       && scope.pathname.startsWith(repoScope.pathname);
   });
   await Promise.all(oldRepoRegistrations.map((item) => item.unregister()));
@@ -61,8 +62,7 @@ async function registerSW() {
   });
 
   if (!await waitForUltravioletController(registration)) {
-    const active = registration.active;
-    const activePing = await pingUltraviolet(active);
+    const activePing = await pingUltraviolet(registration.active);
     throw new Error(activePing
       ? "Ultraviolet installed, but this tab is still controlled by an older service worker. Close every Proxy tab, then reopen the site."
       : "Ultraviolet could not take control. The worker failed its startup handshake. Close every Proxy tab, then reopen the site.");

@@ -3,22 +3,23 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-const html = fs.readFileSync("index.html", "utf8");
-const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
-  .map((match) => match[1])
-  .filter((source) => source.trim());
+const root = fs.readFileSync("index.html", "utf8");
+const html = fs.readFileSync("public/index.html", "utf8");
+const app = fs.readFileSync("public/app.js", "utf8");
+const sw = fs.readFileSync("public/sw.js", "utf8");
+const config = fs.readFileSync("public/uv/uv.config.js", "utf8");
 
-assert.equal(inlineScripts.length, 1, "frontend should have one inline ES module");
-assert.match(html, /id="searchbar"/, "keep exactly one destination input");
-assert.match(html, /id="preset-select"/, "keep the preset selector");
-assert.equal(html.includes('id="engine-select"'), false, "keep the homepage Scramjet-only");
-assert.equal((html.match(/<input[^>]+type="text"/gi) || []).length, 2,
-  "the only text inputs should be the destination bar and hidden Wisp settings input");
-assert.equal(html.includes('id="server-input"'), false, "do not add a second visible backend input");
-assert.equal(html.includes("onrender.com"), false, "do not depend on Render");
-assert.match(inlineScripts[0], /function toUrl\(raw\)/, "URL normalization should remain in place");
-assert.match(inlineScripts[0], /https:\/\/duckduckgo\.com\//, "non-URL text should remain searchable");
-assert.match(inlineScripts[0], /bar\.value = destination/, "normalize the actual destination input");
-assert.match(inlineScripts[0], /searchForm\.requestSubmit\(\)/, "presets should use the same form submission path");
+assert.match(root, /location\.replace\(new URL\("\.\/public\//, "repository root should route visitors to the Ultraviolet app");
+assert.match(html, /id="uv-address"/, "keep one main destination input");
+assert.match(html, /id="preset-select"/, "keep the existing preset list");
+assert.match(html, /id="uv-frame"/, "keep the Ultraviolet browsing frame");
+assert.match(html, /baremux\/index\.js/, "load BareMux");
+assert.match(html, /uv\/uv\.bundle\.js/, "load Ultraviolet bundle");
+assert.match(app, /__uv\$config\.prefix \+ __uv\$config\.encodeUrl\(target\)/, "navigation must use Ultraviolet URL encoding");
+assert.match(app, /presetSelect\.addEventListener\("change"/, "presets must use the normal destination submission path");
+assert.match(app, /proxy-wisp/, "retain the existing Supabase Wisp endpoint");
+assert.match(sw, /uv\.bundle\.js/, "service worker must route requests through Ultraviolet");
+assert.match(config, /uv\/service\//, "Ultraviolet service prefix must remain configured");
+assert.equal(root.toLowerCase().includes("scramjet"), false, "root entry point must not load Scramjet");
 
-console.log("Frontend structure tests passed: one destination bar, presets, and normalized URL submission.");
+console.log("Ultraviolet frontend tests passed: root redirect, presets, URL routing, service worker, and Wisp transport.");

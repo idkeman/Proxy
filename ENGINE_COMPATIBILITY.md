@@ -7,7 +7,7 @@ This branch is a single-engine Ultraviolet build. Scramjet is not used for navig
 - GitHub Pages: https://idkeman.github.io/Proxy/
 - App entry point: `public/index.html`; the repository root redirects to it.
 - Browser engine: [Ultraviolet](https://github.com/titaniumnetwork-dev/Ultraviolet)
-- Service worker: `public/sw.js`, scoped to the app directory.
+- Service worker: `/Proxy/sw.js`, scoped to `/Proxy/`.
 - Transport: Epoxy through BareMux.
 - Wisp endpoint: `wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/`
 
@@ -15,9 +15,9 @@ GitHub Pages hosts the static interface and vendored browser assets. Supabase ho
 
 ## Legacy service-worker migration
 
-Older versions registered Scramjet's worker at the repository root (`/Proxy/`). This branch retires that root worker and unregisters any other legacy worker inside this repository path before starting Ultraviolet. Startup waits for, and verifies, the Ultraviolet worker at `/Proxy/public/sw.js` to control the page. This avoids a stale root worker intercepting requests intended for the Ultraviolet app.
+Older versions registered Scramjet's worker at the repository root (`/Proxy/`). Ultraviolet now replaces that exact worker script in-place at the same `/Proxy/` scope. This avoids competing root and nested workers: the browser updates the existing registration to the Ultraviolet script, which imports the vendored assets from `/Proxy/public/` and claims existing pages. Startup verifies that `/Proxy/sw.js` is the active controller before opening a destination.
 
-If a browser still has an old controller after deployment, close all Proxy tabs and reopen https://idkeman.github.io/Proxy/ so the retired worker can update and unregister.
+If a browser still has an old controller after deployment, close all Proxy tabs and reopen https://idkeman.github.io/Proxy/. The existing root worker should update in-place to Ultraviolet.
 
 ## Navigation behavior
 

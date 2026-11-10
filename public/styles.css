@@ -257,3 +257,17 @@ button { color: inherit; }
   .toolbar-button { flex-basis: 31px; height: 33px; font-size: 15px; }
   #uv-frame { min-height: calc(100vh - 140px); }
 }
+
+
+/* Presets remain part of the single destination field workflow. */
+#preset-select {
+  display: block;
+  width: min(600px, 88vw);
+  margin: 14px auto 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(166,181,218,.22);
+  border-radius: 12px;
+  background: #11182a;
+  color: var(--text);
+  font: inherit;
+}

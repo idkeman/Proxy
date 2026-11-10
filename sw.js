@@ -1,8 +1,10 @@
-// Ultraviolet worker registered at /Proxy/.
-// It replaces the previous Scramjet worker in-place at the same scope.
-importScripts("./public/uv/uv.bundle.js");
-importScripts("./public/uv/uv.config.js");
-importScripts(__uv$config.sw || "./public/uv/uv.sw.js");
+// Root-scoped Ultraviolet worker. GitHub Pages stores the app assets
+// under /Proxy/public/, while the local Express server mounts public/ at /.
+const __uvAssetBase = self.location.pathname === "/sw.js" ? "./" : "./public/";
+
+importScripts(__uvAssetBase + "uv/uv.bundle.js");
+importScripts(__uvAssetBase + "uv/uv.config.js");
+importScripts(__uvAssetBase + "uv/uv.sw.js");
 
 const uv = new UVServiceWorker();
 

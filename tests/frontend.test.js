@@ -35,7 +35,8 @@ assert.match(config, /prefix: __proxyBase \+ "uv\/service\/"/, "UV service prefi
 assert.match(config, /handler: __proxyBase \+ "uv\/uv\.handler\.js"/, "UV handler path must use the same asset base");
 assert.match(config, /client: __proxyBase \+ "uv\/uv\.client\.js"/, "UV client path must use the same asset base");
 
-assert.match(registration, /new URL\("\.\.\/sw\.js"/, "page must update the existing root worker script");
+assert.match(registration, /sw\.js\?uv-build=20261110b/, "page must force a versioned worker script URL");
+assert.match(registration, /oldRepoRegistrations\.map\(\(item\) => item\.unregister\(\)\)/, "migration must remove stale root and nested registrations before installing UV");
 assert.match(registration, /scope: repoScope\.pathname/, "Ultraviolet must use the existing root scope");
 assert.match(registration, /UV_WORKER_READY/, "startup must verify the running worker version");
 assert.match(sw, /self\.clients\.claim\(\)/, "root Ultraviolet worker must claim existing pages");

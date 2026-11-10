@@ -1,9 +1,7 @@
 "use strict";
 
 // Resolve paths from this script's URL, not location.href (the document URL).
-// On GitHub Pages this script is /Proxy/register-sw.js only if moved; currently
-// it is /Proxy/register-sw.js? Actually served from /Proxy/register-sw.js
-// through the app's public directory at /Proxy/register-sw.js.
+// On GitHub Pages this resolves to /Proxy/public/register-sw.js.
 const registrationScriptUrl = document.currentScript?.src || new URL("./register-sw.js", location.href).href;
 const appBase = new URL("./", registrationScriptUrl);
 const rootSW = new URL("../sw.js?uv-build=20261110d", registrationScriptUrl).href;

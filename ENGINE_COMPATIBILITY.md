@@ -1,43 +1,39 @@
-# Multi-engine compatibility and deployment status
+# Ultraviolet deployment status
 
-This repository intentionally does not report an engine as available merely because its browser-side assets exist.
+This branch is a single-engine Ultraviolet build. Scramjet is not used for navigation.
 
-## Current status
+## Active deployment
 
-| Engine | Frontend assets | Required backend | Current backend match | Status |
-| --- | --- | --- | --- | --- |
-| Scramjet | Bundled in `scramjet-engine/` | Scramjet controller + BareMux transport + Wisp-compatible transport endpoint | `proxy-wisp` is a Wisp WebSocket TCP relay and is what the current Scramjet page configures | Configured; live GitHub Pages Chromium test passed |
-| Ultraviolet | Bundled under `public/uv/`; app at `public/index.html` | Ultraviolet service worker + BareMux/Epoxy transport configured for Wisp | The existing UV app already selects Epoxy and connects to the same Supabase Wisp endpoint; the local Chromium browser test passes its target-site navigation | Configured; live GitHub Pages Chromium test passed |
-| Rammerhead | Not integrated as a browser-side engine | A separately running Rammerhead Node.js application with its own session/proxy routes | `proxy-wisp` is not a Rammerhead server | Blocked; needs a Node.js host |
+- GitHub Pages: https://idkeman.github.io/Proxy/
+- App entry point: `public/index.html`; the repository root redirects to it.
+- Browser engine: [Ultraviolet](https://github.com/titaniumnetwork-dev/Ultraviolet)
+- Service worker: `public/sw.js`, scoped to the app directory.
+- Transport: Epoxy through BareMux.
+- Wisp endpoint: `wss://dkwmkvruzebnqlmvwzhy.supabase.co/functions/v1/proxy-wisp/`
 
-## Free-tier deployment implications
+GitHub Pages hosts the static interface and vendored browser assets. Supabase hosts the Wisp WebSocket TCP relay used by BareMux/Epoxy.
 
-- GitHub Pages can host the static UI and existing browser assets; it cannot run the Node.js service required by Rammerhead or a Bare server.
-- Supabase currently hosts `proxy-wisp`, which accepts WebSocket upgrades and relays TCP connections using Wisp framing. Scramjet and this repository's existing Ultraviolet/BareMux/Epoxy setup can use that transport. It is not a Rammerhead endpoint.
-- Supabase Edge Functions are designed for edge request handlers. The current Ultraviolet app is configured to use Wisp through BareMux/Epoxy, so it does not require us to invent a Bare endpoint for this build. Rammerhead still requires its own compatible Node.js server runtime. Do not assume that requirement is solved by changing a URL.
-- A free Node-compatible host may be suitable for the Bare server and Rammerhead, but its current free-tier availability, sleep behavior, WebSocket support, and proxy-use terms must be checked before deployment. No external host is silently assumed or configured here.
+## Legacy service-worker migration
 
-## UI behavior
+Older versions registered Scramjet's worker at the repository root (`/Proxy/`). This branch retires that root worker and unregisters any other legacy worker inside this repository path before starting Ultraviolet. Startup waits for, and verifies, the Ultraviolet worker at `/Proxy/public/sw.js` to control the page. This avoids a stale root worker intercepting requests intended for the Ultraviolet app.
 
-The homepage keeps one destination input and all existing preset options. The engine selector persists the user's choice. Scramjet remains the only engine allowed to navigate until the corresponding backend has been deployed and verified. Selecting Ultraviolet opens the existing `public/index.html` app and passes the normalized destination through its query string, preserving preset launches. Selecting Rammerhead displays the concrete missing dependency and blocks navigation rather than sending the request to an incompatible backend.
+If a browser still has an old controller after deployment, close all Proxy tabs and reopen https://idkeman.github.io/Proxy/ so the retired worker can update and unregister.
 
-## Verification checklist
+## Navigation behavior
 
-Verified on 2026-10-14: the CI Chromium test successfully navigated to `https://example.com/` through both the deployed Scramjet route and the engine selector's Ultraviolet route. This verifies those two engines against the current deployed Wisp endpoint; it does not verify Rammerhead.
+- One visible destination input is retained.
+- Existing preset groups and preset URLs are retained.
+- Hostnames such as `example.com` are normalized to HTTPS.
+- Presets and typed destinations use the same Ultraviolet navigation function.
+- The target is encoded with Ultraviolet's configured URL codec.
+- No Scramjet or Rammerhead engine selector is present in this branch.
 
-Before changing another engine's status to available:
+## Verification
 
-1. Confirm its deployed endpoint and expected protocol.
-2. Run the endpoint's health/manifest check.
-3. Verify WebSocket upgrade behavior where required.
-4. Run an actual browser navigation to a controlled HTTPS test page on the deployed GitHub Pages path.
-5. Test reload, in-site navigation, and at least one preset for both Scramjet and Ultraviolet.
-6. Confirm no cross-engine service-worker or storage collision.
-7. Record endpoint and browser test results here.
+The GitHub Actions workflow checks JavaScript syntax, frontend routing, the Supabase Wisp health endpoint, a local Chromium navigation, and a live GitHub Pages Chromium navigation to `https://example.com/`. A passing Pages build alone is not treated as proof that proxy navigation works.
 
-## Upstream references
+## Upstream projects
 
-- Scramjet App: https://github.com/MercuryWorkshop/Scramjet-App
-- Ultraviolet App: https://github.com/titaniumnetwork-dev/Ultraviolet-App
-- TOMPHTTP Bare server: https://www.npmjs.com/package/@tomphttp/bare-server-node
-- Rammerhead: https://github.com/binary-person/rammerhead
+- Ultraviolet: https://github.com/titaniumnetwork-dev/Ultraviolet
+- BareMux: https://github.com/MercuryWorkshop/bare-mux
+- Epoxy transport: https://github.com/MercuryWorkshop/epoxy-transport

@@ -9,6 +9,8 @@ const app = fs.readFileSync("public/app.js", "utf8");
 const sw = fs.readFileSync("sw.js", "utf8");
 const registration = fs.readFileSync("public/register-sw.js", "utf8");
 const config = fs.readFileSync("public/uv/uv.config.js", "utf8");
+const uvBundle = fs.readFileSync("public/uv/uv.bundle.js", "utf8");
+const uvWorker = fs.readFileSync("public/uv/uv.sw.js", "utf8");
 
 assert.match(root, /location\.replace\(new URL\("\.\/public\//, "repository root should route visitors to the Ultraviolet app");
 assert.match(html, /id="uv-address"/, "keep one main destination input");
@@ -19,13 +21,24 @@ assert.match(html, /uv\/uv\.bundle\.js/, "load Ultraviolet bundle");
 assert.match(app, /__uv\$config\.prefix \+ __uv\$config\.encodeUrl\(target\)/, "navigation must use Ultraviolet URL encoding");
 assert.match(app, /presetSelect\.addEventListener\("change"/, "presets must use the normal destination submission path");
 assert.match(app, /proxy-wisp/, "retain the existing Supabase Wisp endpoint");
-assert.match(sw, /public\/uv\/uv\.bundle\.js/, "root service worker must import Ultraviolet assets");
-assert.match(sw, /self\.clients\.claim\(\)/, "root Ultraviolet worker must claim existing pages");
-assert.match(sw, /UV_WORKER_READY/, "root worker must answer the Ultraviolet handshake");
+
+// Verify that every imported file exists at the URL produced by each host layout.
+assert.match(sw, /__uvAssetBase \+ "uv\/uv\.bundle\.js"/, "root worker must derive its UV asset directory");
+assert.match(sw, /importScripts\(__uvAssetBase \+ "uv\/uv\.config\.js"\)/, "root worker must load the matching UV config");
+assert.match(sw, /importScripts\(__uvAssetBase \+ "uv\/uv\.sw\.js"\)/, "root worker must load the UV service worker directly");
+assert.ok(uvBundle.length > 10000, "UV bundle must be present and non-empty");
+assert.ok(uvWorker.includes("UVServiceWorker"), "UV service worker implementation must be present");
+assert.match(config, /self\.location\.pathname === "\/sw\.js"/, "local root worker must resolve assets from /");
+assert.match(config, /endsWith\("\/public\/sw\.js"\)/, "public worker must resolve assets from its own directory");
+assert.match(config, /new URL\("\.\/public\/", self\.location\.href\)/, "GitHub Pages root worker must resolve assets from /Proxy/public/");
+assert.match(config, /prefix: __proxyBase \+ "uv\/service\/"/, "UV service prefix must use the same asset base");
+assert.match(config, /handler: __proxyBase \+ "uv\/uv\.handler\.js"/, "UV handler path must use the same asset base");
+assert.match(config, /client: __proxyBase \+ "uv\/uv\.client\.js"/, "UV client path must use the same asset base");
+
 assert.match(registration, /new URL\("\.\.\/sw\.js"/, "page must update the existing root worker script");
 assert.match(registration, /scope: repoScope\.pathname/, "Ultraviolet must use the existing root scope");
-assert.match(registration, /UV_WORKER_READY/, "startup must verify the running worker version, not just its script URL");
-assert.match(config, /uv\/service\//, "Ultraviolet service prefix must remain configured");
+assert.match(registration, /UV_WORKER_READY/, "startup must verify the running worker version");
+assert.match(sw, /self\.clients\.claim\(\)/, "root Ultraviolet worker must claim existing pages");
 assert.equal(root.toLowerCase().includes("scramjet"), false, "root entry point must not load Scramjet");
 
-console.log("Ultraviolet frontend tests passed: root scope replacement, worker handshake, presets, URL routing, and Wisp transport.");
+console.log("Ultraviolet frontend tests passed: asset paths, worker imports, root scope, presets, URL routing, and Wisp transport.");

@@ -7,6 +7,8 @@ const root = fs.readFileSync("index.html", "utf8");
 const html = fs.readFileSync("public/index.html", "utf8");
 const app = fs.readFileSync("public/app.js", "utf8");
 const sw = fs.readFileSync("public/sw.js", "utf8");
+const legacySw = fs.readFileSync("sw.js", "utf8");
+const registration = fs.readFileSync("public/register-sw.js", "utf8");
 const config = fs.readFileSync("public/uv/uv.config.js", "utf8");
 
 assert.match(root, /location\.replace\(new URL\("\.\/public\//, "repository root should route visitors to the Ultraviolet app");

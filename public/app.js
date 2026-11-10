@@ -129,6 +129,16 @@ async function startProxy(rawInput) {
   }
 }
 
+const presetSelect = document.getElementById("preset-select");
+if (presetSelect) {
+  presetSelect.addEventListener("change", () => {
+    if (!presetSelect.value) return;
+    address.value = presetSelect.value;
+    form.requestSubmit();
+    presetSelect.selectedIndex = 0;
+  });
+}
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   startProxy(address.value);

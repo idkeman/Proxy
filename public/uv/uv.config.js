@@ -1,7 +1,14 @@
-// Derive the application base path in both page and service-worker contexts.
+// Resolve assets relative to the actual app, not the worker's scope root.
+// GitHub Pages serves the app under /Proxy/public/ while the migration worker
+// is at /Proxy/sw.js. The local Express server serves public/ at /.
 const __proxyBase = typeof document !== "undefined"
   ? new URL("../", document.currentScript.src).pathname
-  : new URL("./", self.location.href).pathname;
+  : self.location.pathname === "/sw.js"
+    ? "/"
+    : self.location.pathname.endsWith("/public/sw.js")
+      ? new URL("./", self.location.href).pathname
+      : new URL("./public/", self.location.href).pathname;
+
 self.__uv$config = {
   prefix: __proxyBase + "uv/service/",
   encodeUrl: Ultraviolet.codec.xor.encode,

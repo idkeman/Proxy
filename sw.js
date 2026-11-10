@@ -1,12 +1,9 @@
-// Retire the legacy root-scoped Scramjet service worker.
-// The active Ultraviolet worker is registered from /public/sw.js.
+// Retire the old root-scoped service worker.
+// Ultraviolet runs from the more-specific /public/ scope.
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    await self.registration.unregister();
-    await self.clients.claim();
-  })());
+  event.waitUntil(self.registration.unregister());
 });

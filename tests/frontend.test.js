@@ -35,7 +35,13 @@ assert.match(config, /prefix: __proxyBase \+ "uv\/service\/"/, "UV service prefi
 assert.match(config, /handler: __proxyBase \+ "uv\/uv\.handler\.js"/, "UV handler path must use the same asset base");
 assert.match(config, /client: __proxyBase \+ "uv\/uv\.client\.js"/, "UV client path must use the same asset base");
 
-assert.match(registration, /sw\.js\?uv-build=20261110b/, "page must force a versioned worker script URL");
+const deployedScriptUrl = new URL("https://idkeman.github.io/Proxy/public/register-sw.js?uv-build=20261110c");
+const deployedWorkerUrl = new URL("../sw.js?uv-build=20261110d", deployedScriptUrl);
+const deployedScopeUrl = new URL("../", deployedScriptUrl);
+assert.equal(deployedWorkerUrl.pathname, "/Proxy/sw.js", "GitHub Pages worker URL must stay inside /Proxy/");
+assert.equal(deployedScopeUrl.pathname, "/Proxy/", "GitHub Pages worker scope must stay inside /Proxy/");
+assert.match(registration, /document\.currentScript\?\.src/, "registration paths must be based on the registration script URL, not the document URL");
+assert.match(registration, /sw\.js\?uv-build=20261110d/, "page must force a versioned worker script URL");
 assert.match(registration, /oldRepoRegistrations\.map\(\(item\) => item\.unregister\(\)\)/, "migration must remove stale root and nested registrations before installing UV");
 assert.match(registration, /scope: repoScope\.pathname/, "Ultraviolet must use the existing root scope");
 assert.match(registration, /UV_WORKER_READY/, "startup must verify the running worker version");

@@ -2,7 +2,7 @@ name: Validate Proxy
 
 on:
   push:
-    branches: [main]
+    branches: [main, ultraviolet]
   pull_request:
 
 jobs:

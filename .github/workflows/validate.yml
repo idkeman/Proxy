@@ -30,7 +30,7 @@ jobs:
           import fs from 'node:fs';
           import { execFileSync } from 'node:child_process';
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
             .map((match) => match[1])
             .filter((source) => source.trim());
           if (scripts.length === 0) {

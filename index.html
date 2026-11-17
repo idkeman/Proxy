@@ -1532,15 +1532,27 @@
             [...presetSelect.options].filter(option => option.value).map(option => normalizeUrl(option.value))
           );
           (data || []).forEach(record => {
-            if (!record.website_url || existing.has(normalizeUrl(record.website_url))) return;
+            if (!record.website_url) return;
             const group = getGroup(record.category);
             if (!group) return;
+            const key = normalizeUrl(record.website_url);
+            const alreadyListed = [...presetSelect.options].find(option =>
+              option.value && normalizeUrl(option.value) === key
+            );
+            if (alreadyListed) {
+              alreadyListed.dataset.sharedWebsiteId = String(record.id);
+              alreadyListed.textContent = record.label || alreadyListed.textContent;
+              if (alreadyListed.parentElement !== group) group.appendChild(alreadyListed);
+              existing.add(key);
+              return;
+            }
+            if (existing.has(key)) return;
             const option = document.createElement("option");
             option.value = record.website_url;
             option.textContent = record.label || new URL(record.website_url).hostname;
             option.dataset.sharedWebsiteId = String(record.id);
             group.appendChild(option);
-            existing.add(normalizeUrl(record.website_url));
+            existing.add(key);
           });
         }
 

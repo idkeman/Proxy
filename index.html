@@ -406,6 +406,20 @@
         border-radius: 0 2px 2px 0;
       }
     #wisp-panel { display:none !important; } #preset-select { width:min(600px,88vw); margin-top:14px; padding:12px 16px; border:1px solid rgba(255,255,255,.16); border-radius:12px; background:#121722; color:#fff; font:inherit; }
+      #shared-preset-tools{width:min(600px,88vw);margin:11px auto 0;text-align:left;color:rgba(235,242,255,.78);font-size:.78rem}
+      #shared-preset-tools details{border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(15,20,31,.82);padding:10px 12px}
+      #shared-preset-tools summary{cursor:pointer;color:#dfe8ff;font-weight:700}
+      #shared-preset-tools form{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+      #shared-preset-tools label{display:grid;gap:5px;color:#bac8df;font-size:.72rem}
+      #shared-preset-tools input,#shared-preset-tools select{width:100%;min-width:0;padding:9px;border:1px solid rgba(255,255,255,.15);border-radius:8px;background:#0b1220;color:white;font:inherit}
+      #shared-preset-tools .shared-full{grid-column:1/-1}
+      #shared-preset-tools button{border:0;border-radius:8px;padding:10px 12px;background:linear-gradient(100deg,#7767ec,#4c9cff);color:white;font:700 .78rem system-ui,sans-serif;cursor:pointer}
+      #shared-preset-tools button:disabled{opacity:.55;cursor:wait}
+      #shared-preset-tools a{color:#9bcaff}
+      #shared-preset-feedback{min-height:1.2em;margin:8px 0 0;color:#9fe9cf}
+      #shared-preset-feedback.error{color:#ff9fa9}
+      #shared-preset-tools [hidden]{display:none!important}
+      @media(max-width:520px){#shared-preset-tools form{grid-template-columns:1fr}#shared-preset-tools .shared-full{grid-column:auto}}
 
       /* ── Multi-engine selector ───────────────────────────────────── */
       #engine-settings {
@@ -495,6 +509,33 @@
 <optgroup label="Proxies"><option value="https://truffled.lol/">Truffled</option><option value="https://kyro.li/">Kyro</option><option value="https://koronoa.lat/">Koronoa</option></optgroup>
 <optgroup label="My own creations!"><option value="https://idkeman.github.io/snake-replica/">Snake Replica</option><option value="https://bit.ly/1mp0st3">1mp0st3</option><option value="https://idkeman.github.io/Towerd/">Towerd</option><option value="https://idkeman.github.io/Game-making/">Game-making</option><option value="https://idkeman.github.io/CaseClicker/">CaseClicker</option><option value="https://idkeman.github.io/Pokemon-cheat-sheet/">Pokémon Cheat Sheet</option><option value="https://idkeman.github.io/bitburner/">Bitburner</option></optgroup>
 </select>
+      <div id="shared-preset-tools">
+        <p id="shared-preset-login-hint">Both sites use one shared website list. <a href="https://idkeman.github.io/website-load/" target="_blank" rel="noopener">Sign in on Website Load</a> with an administrator account to add entries here.</p>
+        <details id="shared-preset-manager" hidden>
+          <summary>Add a website to both lists</summary>
+          <form id="shared-preset-form">
+            <label>Website name
+              <input id="shared-preset-label" maxlength="80" placeholder="Example: My new game" required>
+            </label>
+            <label>Website URL
+              <input id="shared-preset-url" maxlength="500" inputmode="url" placeholder="https://example.com" required>
+            </label>
+            <label class="shared-full">Category
+              <select id="shared-preset-category">
+                <option value="Games">Games</option>
+                <option value="Study">Study</option>
+                <option value="Movies & Misc">Movies & Misc</option>
+                <option value="Proxies">Proxies</option>
+                <option value="My own creations!">My own creations!</option>
+                <option value="Working Proxies">Working Proxies</option>
+                <option value="Scratch">Scratch</option>
+              </select>
+            </label>
+            <button class="shared-full" id="shared-preset-submit" type="submit">Add to shared list</button>
+          </form>
+          <p id="shared-preset-feedback" role="status" aria-live="polite"></p>
+        </details>
+      </div>
       <p id="status">Initialising…</p>
 
       <!-- WISP server settings panel -->
@@ -560,6 +601,7 @@
     <!-- Yellow reload/network status toast -->
     <div id="reload-toast"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module">
       // IMMEDIATE marker — if you don't see "Script started..." appear
       // instantly on page load, the module script is not executing at all,
@@ -1421,6 +1463,184 @@
         status.textContent = 'Error: ' + err.message
         console.error('[Scramjet STATIC] init error:', err)
       }
+    </script>
+    <script>
+      (function () {
+        "use strict";
+        const SUPABASE_URL = "https://dkwmkvruzebnqlmvwzhy.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_Tur9X4MaQjH__4DnEtwAAQ_Xy9xVl5P";
+        const presetSelect = document.getElementById("preset-select");
+        const manager = document.getElementById("shared-preset-manager");
+        const loginHint = document.getElementById("shared-preset-login-hint");
+        const form = document.getElementById("shared-preset-form");
+        const feedback = document.getElementById("shared-preset-feedback");
+        const categoryLabels = {
+          "Games": "Games",
+          "Study": "Study",
+          "Movies & Misc": "Movies & Misc",
+          "Proxies": "Proxies",
+          "My own creations!": "My own creations!",
+          "Working Proxies": "Working Proxies",
+          "Scratch": "Scratch"
+        };
+        if (!window.supabase || !presetSelect) {
+          console.warn("[Shared presets] Supabase client did not load.");
+          return;
+        }
+
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+          auth: {
+            storageKey: "sb-dkwmkvruzebnqlmvwzhy-auth-token",
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+
+        function normalizeUrl(value) {
+          try { return new URL(value).href.toLowerCase(); }
+          catch (_) { return String(value || "").trim().toLowerCase(); }
+        }
+
+        function getGroup(category) {
+          const label = categoryLabels[category];
+          if (!label) return null;
+          let group = [...presetSelect.querySelectorAll("optgroup")].find(item =>
+            item.dataset.sharedCategory === category || item.label === label
+          );
+          if (!group) {
+            group = document.createElement("optgroup");
+            group.label = label;
+            presetSelect.appendChild(group);
+          }
+          group.dataset.sharedCategory = category;
+          return group;
+        }
+
+        async function loadSharedPresets() {
+          const { data, error } = await client.from("shared_website_presets")
+            .select("id,label,website_url,category")
+            .eq("is_active", true)
+            .order("category", { ascending: true })
+            .order("label", { ascending: true });
+          if (error) {
+            console.warn("[Shared presets] List could not be loaded:", error.message);
+            return;
+          }
+
+          const existing = new Set(
+            [...presetSelect.options].filter(option => option.value).map(option => normalizeUrl(option.value))
+          );
+          (data || []).forEach(record => {
+            if (!record.website_url || existing.has(normalizeUrl(record.website_url))) return;
+            const group = getGroup(record.category);
+            if (!group) return;
+            const option = document.createElement("option");
+            option.value = record.website_url;
+            option.textContent = record.label || new URL(record.website_url).hostname;
+            option.dataset.sharedWebsiteId = String(record.id);
+            group.appendChild(option);
+            existing.add(normalizeUrl(record.website_url));
+          });
+        }
+
+        async function refreshAdminAccess() {
+          const { data: sessionData, error: sessionError } = await client.auth.getSession();
+          if (sessionError) console.warn("[Shared presets] Session check failed:", sessionError.message);
+          const user = sessionData && sessionData.session && sessionData.session.user;
+          if (!user) {
+            manager.hidden = true;
+            loginHint.hidden = false;
+            return;
+          }
+
+          const { data: profile, error } = await client.from("profiles")
+            .select("role,banned,banned_until")
+            .eq("id", user.id)
+            .maybeSingle();
+          const activeBan = !!(profile && profile.banned &&
+            (!profile.banned_until || new Date(profile.banned_until) > new Date()));
+          const isAdmin = !error && profile && profile.role === "admin" && !activeBan;
+          manager.hidden = !isAdmin;
+          loginHint.hidden = !!isAdmin;
+        }
+
+        form.addEventListener("submit", async event => {
+          event.preventDefault();
+          const submit = document.getElementById("shared-preset-submit");
+          const label = document.getElementById("shared-preset-label").value.trim();
+          const rawUrl = document.getElementById("shared-preset-url").value.trim();
+          const category = document.getElementById("shared-preset-category").value;
+          feedback.classList.remove("error");
+
+          if (!label || label.length > 80) {
+            feedback.textContent = "Enter a website name between 1 and 80 characters.";
+            feedback.classList.add("error");
+            return;
+          }
+          let parsed;
+          try {
+            const candidate = rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
+              ? rawUrl : "https://" + rawUrl;
+            parsed = new URL(candidate);
+            if (!["http:", "https:"].includes(parsed.protocol) || !parsed.hostname.includes(".") ||
+                parsed.username || parsed.password || parsed.href.length > 500) throw new Error();
+          } catch (_) {
+            feedback.textContent = "Enter a valid http or https website URL.";
+            feedback.classList.add("error");
+            return;
+          }
+
+          submit.disabled = true;
+          feedback.textContent = "Adding website...";
+          try {
+            const { data: sessionData } = await client.auth.getSession();
+            const user = sessionData && sessionData.session && sessionData.session.user;
+            if (!user) throw new Error("Sign in as an administrator on Website Load first.");
+
+            const cleanUrl = parsed.href;
+            const { data: existing, error: lookupError } = await client.from("shared_website_presets")
+              .select("id").eq("website_url", cleanUrl).maybeSingle();
+            if (lookupError) throw lookupError;
+            if (existing) {
+              feedback.textContent = "That website is already in the shared list.";
+              feedback.classList.add("error");
+              return;
+            }
+
+            const { error } = await client.from("shared_website_presets").insert({
+              label,
+              website_url: cleanUrl,
+              category,
+              created_by: user.id,
+              added_from: "proxy",
+              is_active: true
+            });
+            if (error) throw error;
+
+            document.getElementById("shared-preset-label").value = "";
+            document.getElementById("shared-preset-url").value = "";
+            feedback.textContent = "Added. Website Load will receive the same entry automatically.";
+            await loadSharedPresets();
+          } catch (error) {
+            feedback.textContent = error.message || "The website could not be added.";
+            feedback.classList.add("error");
+          } finally {
+            submit.disabled = false;
+          }
+        });
+
+        client.auth.onAuthStateChange(() => refreshAdminAccess());
+        client.channel("proxy-shared-website-presets")
+          .on("postgres_changes", { event: "*", schema: "public", table: "shared_website_presets" }, loadSharedPresets)
+          .subscribe();
+
+        loadSharedPresets();
+        refreshAdminAccess();
+        window.addEventListener("focus", refreshAdminAccess);
+        window.addEventListener("focus", loadSharedPresets);
+        window.addEventListener("storage", refreshAdminAccess);
+      })();
     </script>
   </body>
 </html>

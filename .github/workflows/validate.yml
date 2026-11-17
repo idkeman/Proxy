@@ -30,15 +30,18 @@ jobs:
           import fs from 'node:fs';
           import { execFileSync } from 'node:child_process';
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
             .map((match) => match[1])
             .filter((source) => source.trim());
-          if (scripts.length !== 1) {
-            throw new Error('Expected exactly one inline frontend script, found ' + scripts.length);
+          if (scripts.length === 0) {
+            throw new Error('Expected at least one inline frontend script.');
           }
-          fs.writeFileSync('/tmp/proxy-inline.mjs', scripts[0]);
-          execFileSync(process.execPath, ['--check', '/tmp/proxy-inline.mjs'], { stdio: 'inherit' });
-          console.log('Root frontend inline ES module parses successfully.');
+          scripts.forEach((source, index) => {
+            const file = '/tmp/proxy-inline-' + index + '.mjs';
+            fs.writeFileSync(file, source);
+            execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
+          });
+          console.log('All ' + scripts.length + ' root frontend inline scripts parse successfully.');
           NODE
       - name: Test frontend routing behavior
         run: node tests/frontend.test.js

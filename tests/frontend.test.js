@@ -8,7 +8,10 @@ const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script
   .map((match) => match[1])
   .filter((source) => source.trim());
 
-assert.equal(inlineScripts.length, 1, "frontend should have one inline ES module");
+assert.equal(inlineScripts.length, 2, "frontend should have its ES module plus the shared-list sync script");
+assert.match(inlineScripts[1], /shared_website_presets/, "include the shared preset client");
+assert.match(inlineScripts[1], /postgres_changes/, "listen for changes from the other site");
+assert.match(inlineScripts[1], /added_from: "proxy"/, "new Proxy entries should be written to the shared list");
 assert.match(html, /id="searchbar"/, "keep exactly one destination input");
 assert.match(html, /id="preset-select"/, "keep the preset selector");
 assert.equal(html.includes('id="engine-select"'), false, "keep the homepage Scramjet-only");
@@ -21,4 +24,4 @@ assert.match(inlineScripts[0], /https:\/\/duckduckgo\.com\//, "non-URL text shou
 assert.match(inlineScripts[0], /bar\.value = destination/, "normalize the actual destination input");
 assert.match(inlineScripts[0], /searchForm\.requestSubmit\(\)/, "presets should use the same form submission path");
 
-console.log("Frontend structure tests passed: one destination bar, presets, and normalized URL submission.");
+console.log("Frontend structure tests passed: proxy navigation, presets, and shared-list synchronization.");

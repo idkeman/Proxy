@@ -7,7 +7,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
-    <script src="./bare-mux/bare-mux.js"></script>
+    <script src="./scramjet-runtime/scramjet/scramjet.js"></script>
+    <script src="./scramjet-runtime/controller/controller.api.js"></script>
+    <script src="./scramjet-runtime/epoxy/index.js"></script>
+    <script src="./scramjet-runtime/libcurl/index.js"></script>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; color: #fff; }
@@ -459,7 +462,7 @@
 
     <div id="release-overlay">
       <div id="release-modal">
-        <h2>Welcome to Scramjet STATIC v2</h2>
+        <h2>Welcome to Scramjet 2.x</h2>
         <p class="intro">
           Scramjet STATIC v2 has arrived — featuring bug fixes, new features,
           and overall improvements to the SJ-STATIC engine, from navigation
@@ -489,7 +492,7 @@
       </div>
     </div>
 
-    <div id="build-label">Build 2.0</div>
+    <div id="build-label">Build 3.0 · Scramjet 2.x</div>
     <a id="about-link" href="https://hahahah67-pixel.github.io/scramjet-static/about.md" target="_blank" rel="noopener">about</a>
     <div id="home">
       <h1 class="title">Proxy <span>WEB</span></h1>
@@ -820,22 +823,13 @@
       // what our UI/localStorage claims. Written as a real DOM attribute
       // on <html> so it's inspectable in DevTools Elements tab, and also
       // logged to console. Cannot be faked by our own UI state.
+      let controller = null;
+      let scramjetFrame = null;
+      let currentTransport = 'epoxy';
+      let pendingTransport = 'epoxy';
       async function verifyActiveTransport() {
-        if (!currentConn) return
-        try {
-          const active = await currentConn.getTransport()
-          // active is typically the loaded module path/name from the worker,
-          // e.g. ".../transport/epoxy.mjs" or ".../transport/libcurl.mjs"
-          const label = String(active).includes('epoxy') ? 'epoxy'
-                      : String(active).includes('libcurl') ? 'libcurl'
-                      : String(active)
-          document.documentElement.setAttribute('data-active-transport', label)
-          document.documentElement.setAttribute('data-active-transport-raw', String(active))
-          console.log('[Scramjet STATIC] VERIFIED active transport (from bare-mux worker itself):', active)
-        } catch (e) {
-          document.documentElement.setAttribute('data-active-transport', 'unknown (getTransport failed)')
-          console.warn('[Scramjet STATIC] Could not verify active transport:', e)
-        }
+        document.documentElement.setAttribute('data-active-transport', currentTransport);
+        document.documentElement.setAttribute('data-active-transport-raw', 'Scramjet Controller transport: ' + currentTransport);
       }
 
       const BASE = new URL('./', document.baseURI).pathname
@@ -1079,24 +1073,21 @@
         cancelReload()
       }
 
-      function showBrowser(encodedUrl) {
-        startLoadBar()
-        if (!browsing) {
-          frame.contentWindow.location.replace(encodedUrl)
-        } else {
-          frame.src = encodedUrl
-        }
-        home.classList.add('hidden')
-        frame.classList.add('visible')
-        fabBar.classList.add('visible')
-        // Direct display:none guarantee — independent of z-index stacking,
-        // cannot be defeated by any CSS stacking context issue
-        buildLabel.style.display = 'none'
-        aboutLink.style.display = 'none'
-        if (!browsing) {
-          history.pushState({ browsing: true }, '')
-          browsing = true
-        }
+      function showBrowser(destinationUrl) {
+        startLoadBar();
+        if (!scramjetFrame) { status.textContent = 'The proxy controller is not ready yet.'; return; }
+        Promise.resolve(scramjetFrame.go(destinationUrl)).catch(err => {
+          finishLoadBar();
+          status.style.color = '#f87171';
+          status.textContent = 'Navigation failed: ' + (err.message || err);
+          console.error('[Scramjet 2.x] Navigation error:', err);
+        });
+        home.classList.add('hidden');
+        frame.classList.add('visible');
+        fabBar.classList.add('visible');
+        buildLabel.style.display = 'none';
+        aboutLink.style.display = 'none';
+        if (!browsing) { history.pushState({ browsing: true }, ''); browsing = true; }
       }
 
       // Fire the loading bar to completion whenever the iframe finishes
@@ -1335,84 +1326,50 @@
       }
 
       try {
-        status.textContent = 'Loading configuration…'
-        await loadForkDefaults()
+        status.textContent = 'Loading Scramjet 2.x configuration…';
+        await loadForkDefaults();
+        const WISP = getSavedWisp();
+        wispInput.value = WISP;
+        currentTransport = getSavedTransport();
+        setTransportUI(currentTransport);
 
-        const WISP   = getSavedWisp()
-        const PREFIX = BASE + 'scramjet/'
-
-        wispInput.value = WISP
-        setTransportUI(getSavedTransport())
-
-        const isFirstLoad = !navigator.serviceWorker.controller
-
-        if (isFirstLoad) {
-          status.textContent = 'Preparing…'
-          try {
-            const regs = await Promise.race([
-              navigator.serviceWorker.getRegistrations(),
-              new Promise((_, rej) => setTimeout(() => rej(new Error('SW registration lookup timed out')), 5000))
-            ])
-            await Promise.all(regs.map(r => r.unregister()))
-          } catch (e) {
-            console.warn('[Scramjet STATIC] SW cleanup skipped:', e)
-          }
-          try {
-            await Promise.race([
-              new Promise(r => {
-                const req = indexedDB.deleteDatabase('$scramjet')
-                req.onsuccess = req.onerror = req.onblocked = r
-              }),
-              new Promise(r => setTimeout(r, 5000))
-            ])
-          } catch (e) {
-            console.warn('[Scramjet STATIC] IDB cleanup skipped:', e)
-          }
+        status.textContent = 'Registering Scramjet service worker…';
+        const registration = await navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE });
+        await navigator.serviceWorker.ready;
+        if (!navigator.serviceWorker.controller) {
+          status.textContent = 'Activating service worker…';
+          await Promise.race([
+            new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker did not take control. Reload once and retry.')), 15000))
+          ]);
         }
+        const serviceWorker = navigator.serviceWorker.controller || registration.active;
+        if (!serviceWorker) throw new Error('Scramjet service worker is not active.');
 
-        status.textContent = 'Loading engine…'
-        await import('./scramjet-engine/scramjet.js')
+        const Controller = window.$scramjetController && window.$scramjetController.Controller;
+        if (typeof Controller !== 'function') throw new Error('Scramjet Controller API failed to load.');
+        const transportFor = method => {
+          const api = method === 'libcurl' ? window.LibcurlTransport : window.EpoxyTransport;
+          const Ctor = api && (method === 'libcurl' ? api.LibcurlClient : api.EpoxyClient);
+          if (typeof Ctor !== 'function') throw new Error(method + ' transport bundle failed to load.');
+          return new Ctor({ wisp: WISP });
+        };
 
-        status.textContent = 'Starting controller…'
-        const { ScramjetController } = $scramjetLoadController()
-        const sj = new ScramjetController({
-          prefix: PREFIX,
-          files: {
-            wasm: 'https://raw.githubusercontent.com/hahahah67-pixel/scramjet-static/main/scramjet-engine/scramjet.wasm',
-            all:  BASE + 'scramjet-engine/scramjet-all.js',
-            sync: BASE + 'scramjet-engine/scramjet-sync.js',
-          },
-        })
-
-        if (isFirstLoad) {
-          status.textContent = 'Writing config…'
-          await sj.init()
-          status.textContent = 'Registering service worker…'
-          await navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE })
-          await navigator.serviceWorker.ready
-        } else {
-          status.textContent = 'Registering service worker…'
-          await navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE })
-          await navigator.serviceWorker.ready
-          status.textContent = 'Writing config…'
-          await sj.init()
-        }
-
-        status.textContent = 'Connecting transport…'
-        const conn = new _0zzl94._ak44v7(BASE + 'bare-mux/bare-mux-worker.js')
-        currentTransport = getSavedTransport()
+        status.textContent = 'Connecting ' + currentTransport + ' transport…';
         try {
-          await conn.setTransport(transportPath(currentTransport), [{ wisp: WISP }])
-        } catch (err) {
-          // If the saved transport (e.g. epoxy.mjs missing/broken) fails,
-          // fall back to libcurl instead of bricking the entire site
-          console.warn('[Scramjet STATIC] Saved transport failed, falling back to libcurl:', err)
-          currentTransport = 'libcurl'
-          saveTransportChoice('libcurl')
-          await conn.setTransport(transportPath('libcurl'), [{ wisp: WISP }])
+          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor(currentTransport) });
+          await controller.ready;
+        } catch (transportError) {
+          if (currentTransport !== 'epoxy') throw transportError;
+          console.warn('[Scramjet 2.x] Epoxy failed; falling back to libcurl.', transportError);
+          currentTransport = 'libcurl';
+          saveTransportChoice('libcurl');
+          setTransportUI('libcurl');
+          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor('libcurl') });
+          await controller.ready;
         }
-        currentConn = conn
-        await verifyActiveTransport()
+        scramjetFrame = controller.createFrame(frame);
+        await verifyActiveTransport();
 
         history.replaceState({ home: true }, '')
         status.textContent = 'Ready'
@@ -1425,7 +1382,7 @@
         function navigate(raw) {
           const url = toUrl(raw)
           if (!url) return
-          showBrowser(sj.encodeUrl(url))
+          showBrowser(url)
         }
 
         const searchForm = document.getElementById('proxy-search-form')

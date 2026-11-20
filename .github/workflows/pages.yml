@@ -1,0 +1,66 @@
+name: Deploy Proxy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned Scramjet 2.x runtime packages
+        run: |
+          npm install --prefix .engine --no-save --ignore-scripts \
+            @mercuryworkshop/scramjet@2.0.67-alpha.2 \
+            @mercuryworkshop/scramjet-controller@0.0.14 \
+            @mercuryworkshop/scramjet-utils@0.0.3 \
+            @mercuryworkshop/epoxy-transport@3.0.2 \
+            @mercuryworkshop/libcurl-transport@2.0.6
+      - name: Assemble static Pages site
+        run: |
+          mkdir -p _site/scramjet-runtime/{scramjet,controller,utils,epoxy,libcurl}
+          rsync -a --exclude '_site' --exclude '.engine' --exclude '.git' --exclude '.github' ./ _site/
+          cp -a .engine/node_modules/@mercuryworkshop/scramjet/dist/. _site/scramjet-runtime/scramjet/
+          cp -a .engine/node_modules/@mercuryworkshop/scramjet-controller/dist/. _site/scramjet-runtime/controller/
+          cp -a .engine/node_modules/@mercuryworkshop/scramjet-utils/dist/. _site/scramjet-runtime/utils/
+          cp -a .engine/node_modules/@mercuryworkshop/epoxy-transport/dist/. _site/scramjet-runtime/epoxy/
+          cp -a .engine/node_modules/@mercuryworkshop/libcurl-transport/dist/. _site/scramjet-runtime/libcurl/
+          test -s _site/scramjet-runtime/scramjet/scramjet.js
+          test -s _site/scramjet-runtime/scramjet/scramjet.wasm
+          test -s _site/scramjet-runtime/controller/controller.api.js
+          test -s _site/scramjet-runtime/controller/controller.sw.js
+          test -s _site/scramjet-runtime/epoxy/index.js
+          test -s _site/scramjet-runtime/libcurl/index.js
+          touch _site/.nojekyll
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -7,10 +7,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
-    <script src="./scramjet-runtime/scramjet/scramjet.js"></script>
-    <script src="./scramjet-runtime/controller/controller.api.js"></script>
-    <script src="./scramjet-runtime/epoxy/index.js"></script>
-    <script src="./scramjet-runtime/libcurl/index.js"></script>
+    <script src="./scramjet-runtime/scramjet/scramjet.js?v=3.1.1"></script>
+    <script src="./scramjet-runtime/controller/controller.api.js?v=3.1.1"></script>
+    <script src="./scramjet-runtime/epoxy/index.js?v=3.1.1"></script>
+    <script src="./scramjet-runtime/libcurl/index.js?v=3.1.1"></script>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; color: #fff; }
@@ -1337,8 +1337,17 @@
         };
 
         status.textContent = 'Connecting ' + currentTransport + ' transport…';
+        // GitHub Pages hosts this project below /Proxy/, not at the origin root.
+        // Scramjet's defaults use root-absolute runtime URLs and /~/sj/, which
+        // escape the project path and return GitHub Pages 404s.
+        const runtimeConfig = {
+          prefix: BASE + '~/sj/',
+          scramjetPath: BASE + 'scramjet-runtime/scramjet/scramjet.js',
+          injectPath: BASE + 'scramjet-runtime/controller/controller.inject.js',
+          wasmPath: BASE + 'scramjet-runtime/scramjet/scramjet.wasm'
+        };
         try {
-          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor(currentTransport) });
+          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor(currentTransport), config: runtimeConfig });
           await controller.ready;
         } catch (transportError) {
           if (currentTransport !== 'epoxy') throw transportError;
@@ -1346,7 +1355,7 @@
           currentTransport = 'libcurl';
           saveTransportChoice('libcurl');
           setTransportUI('libcurl');
-          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor('libcurl') });
+          controller = new Controller({ serviceworker: serviceWorker, transport: transportFor('libcurl'), config: runtimeConfig });
           await controller.ready;
         }
         scramjetFrame = controller.createFrame(frame);

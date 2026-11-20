@@ -15,6 +15,10 @@ assert.equal(html.includes("proxy-engine"), false, "homepage must not persist an
 assert.match(html, /scramjet-runtime\/scramjet\/scramjet\.js/, "load the pinned Scramjet 2.x core");
 assert.match(html, /scramjet-runtime\/controller\/controller\.api\.js/, "load the Scramjet 2.x controller");
 assert.match(html, /window\.\$scramjetController/, "initialize the v2 controller API");
+assert.match(html, /prefix: BASE \+ .~\/sj\//, "keep Scramjet virtual URLs inside the GitHub Pages project path");
+assert.match(html, /scramjetPath: BASE \+ .scramjet-runtime\/scramjet\/scramjet\.js/, "resolve the Scramjet core below the project path");
+assert.match(html, /injectPath: BASE \+ .scramjet-runtime\/controller\/controller\.inject\.js/, "resolve the injected controller below the project path");
+assert.match(html, /wasmPath: BASE \+ .scramjet-runtime\/scramjet\/scramjet\.wasm/, "resolve WASM below the project path");
 assert.match(html, /controller\.createFrame\(frame\)/, "create the managed proxy frame");
 assert.match(html, /scramjetFrame\.go\(destinationUrl\)/, "navigate through the v2 frame API");
 assert.equal(html.includes("$scramjetLoadController"), false, "do not use the Scramjet 1.x loader");

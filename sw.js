@@ -1,27 +1,12 @@
-// Scramjet STATIC — Service Worker
-// Engine: Scramjet v1.1.0 (MercuryWorkshop)
-// Transport: libcurl over wss://anura.pro/wisp/
+/* Scramjet 2.x service worker. Keep this file at the repository root so
+   its scope covers the GitHub Pages project path. */
+importScripts("./scramjet-runtime/controller/controller.sw.js");
 
-importScripts('./scramjet-engine/scramjet-all.js')
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", event => event.waitUntil(self.clients.claim()));
 
-const { ScramjetServiceWorker } = $scramjetLoadWorker()
-const scramjet = new ScramjetServiceWorker()
-
-self.addEventListener('install', () => {
-  self.skipWaiting()
-})
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
-})
-
-async function handleRequest(event) {
-  await scramjet.loadConfig()
-  if (!scramjet.route(event)) return fetch(event.request)
-  return scramjet.fetch(event)
-}
-
-self.addEventListener('fetch', (event) => {
-  if (new URL(event.request.url).origin !== self.location.origin) return
-  event.respondWith(handleRequest(event))
-})
+self.addEventListener("fetch", event => {
+  if ($scramjetController.shouldRoute(event)) {
+    event.respondWith($scramjetController.route(event));
+  }
+});

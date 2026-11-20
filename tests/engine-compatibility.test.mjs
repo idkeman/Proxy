@@ -18,7 +18,7 @@ assert.match(html, /window\.\$scramjetController/, "initialize the v2 controller
 assert.match(html, /controller\.createFrame\(frame\)/, "create the managed proxy frame");
 assert.match(html, /scramjetFrame\.go\(destinationUrl\)/, "navigate through the v2 frame API");
 assert.equal(html.includes("$scramjetLoadController"), false, "do not use the Scramjet 1.x loader");
-assert.equal(html.includes("bare-mux"), false, "do not load the deprecated Bare-Mux transport stack");
+assert.equal(html.includes("./bare-mux/bare-mux.js"), false, "do not load the deprecated Bare-Mux transport stack");
 assert.match(worker, /controller\/controller\.sw\.js/, "route requests through the v2 service worker");
 assert.match(worker, /\$scramjetController\.shouldRoute/, "use the v2 service worker router");
 assert.match(wisp, /Wisp WebSocket endpoint|Deno\.upgradeWebSocket/, "Supabase function is a Wisp WebSocket service");

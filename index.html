@@ -473,9 +473,9 @@
           <ul>
             <li>Rebuilt back/forward navigation to reliably return home without falling through to the browser's own history</li>
             <li>Fixed a service worker race condition that could cause the app to hang on "Writing config…" after a reload</li>
-            <li>Added a persistent WISP server settings panel — set and save a custom WISP server directly from the home screen, no redeployment needed</li>
-            <li>Added live transport method switching between libcurl and epoxy — swap transports without reloading the page, your WISP server carries over automatically</li>
-            <li>Added real, verifiable transport confirmation — open DevTools and inspect the &lt;html&gt; tag's data-active-transport attribute to see which transport is actually handling requests, read straight from bare-mux's own internal state, not just what the UI claims</li>
+            <li>Preserved the configurable WISP endpoint and saved transport preferences</li>
+            <li>Migrated transport handling from deprecated Bare-Mux to the Scramjet 2.x controller transport API</li>
+            <li>Added Scramjet 2.x controller-based transport selection with Epoxy and libcurl support</li>
             <li>Added a real animated loading progress bar for page navigation</li>
             <li>Added floating reload and home controls, including live network-loss detection during reload with a clear "no internet" message</li>
             <li>Added an About page (about.md) linked from the home screen, plus a build version label</li>
@@ -858,7 +858,6 @@
           console.warn('[Scramjet STATIC] Could not load transport.txt, using built-in default:', e)
         }
       }
-      let currentConn = null // set once bare-mux connection object exists
       let currentTransport = DEFAULT_TRANSPORT // 'libcurl' or 'epoxy'
       let pendingTransport = DEFAULT_TRANSPORT // what's selected in UI but not yet saved
 

@@ -862,8 +862,11 @@
       let currentTransport = DEFAULT_TRANSPORT // 'libcurl' or 'epoxy'
       let pendingTransport = DEFAULT_TRANSPORT // what's selected in UI but not yet saved
 
-      function transportPath(method) {
-        return 'https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs'
+      function transportConstructor(method) {
+        const api = method === 'libcurl' ? window.LibcurlTransport : window.EpoxyTransport;
+        const Constructor = api && (method === 'libcurl' ? api.LibcurlClient : api.EpoxyClient);
+        if (typeof Constructor !== 'function') throw new Error(method + ' transport bundle failed to load.');
+        return Constructor;
       }
 
       function getSavedTransport() {
@@ -938,40 +941,24 @@
       }
 
       async function applyWisp(url, { persist = true } = {}) {
-        if (!currentConn) {
-          wispSetBtn.textContent = 'Not ready yet…'
-          setTimeout(() => { wispSetBtn.textContent = 'Set' }, 1800)
-          return
-        }
-        wispSetBtn.disabled = true
-        wispResetBtn.disabled = true
-        const originalText = wispSetBtn.textContent
-        wispSetBtn.textContent = 'Setting…'
+        if (!controller) return;
+        wispSetBtn.disabled = true;
+        wispResetBtn.disabled = true;
         try {
-          await currentConn.setTransport(
-            transportPath(currentTransport),
-            [{ wisp: url }]
-          )
-          if (persist) saveWisp(url)
-          wispInput.value = url
-          wispSetBtn.textContent = 'Set'
-          showToast()
+          const Transport = transportConstructor(currentTransport);
+          await controller.setTransport(new Transport({ wisp: url }));
+          if (persist) saveWisp(url);
+          wispInput.value = url;
+          wispToast.textContent = 'WISP server updated!';
+          showToast();
         } catch (err) {
-          // Surface the real error directly on the button instead of
-          // silently failing — this tells us exactly what's wrong
-          wispSetBtn.textContent = 'Failed!'
-          wispToast.textContent = 'Error: ' + err.message
-          wispToast.style.background = '#ff6b6b'
-          showToast()
-          setTimeout(() => {
-            wispToast.textContent = 'wisp server set!'
-            wispToast.style.background = ''
-          }, 4200)
-          console.error('[Scramjet STATIC] setTransport failed:', err)
-          setTimeout(() => { wispSetBtn.textContent = originalText }, 2000)
+          wispToast.textContent = 'Error: ' + err.message;
+          wispToast.style.background = '#ff6b6b';
+          showToast();
+          console.error('[Scramjet 2.x] WISP update failed:', err);
         } finally {
-          wispSetBtn.disabled = false
-          wispResetBtn.disabled = false
+          wispSetBtn.disabled = false;
+          wispResetBtn.disabled = false;
         }
       }
 
@@ -995,43 +982,26 @@
 
       // ── Transport method (libcurl / epoxy) ─────────────────────────────
       async function applyTransport(method) {
-        if (!currentConn) {
-          transportSaveBtn.textContent = 'Not ready yet…'
-          setTimeout(() => { transportSaveBtn.textContent = 'Save' }, 1800)
-          return
-        }
-        transportSaveBtn.disabled = true
-        transportResetBtn.disabled = true
-        const originalText = transportSaveBtn.textContent
-        transportSaveBtn.textContent = 'Saving…'
+        if (!controller) return;
+        transportSaveBtn.disabled = true;
+        transportResetBtn.disabled = true;
         try {
-          const wispUrl = wispInput.value || getSavedWisp()
-          await Promise.race([
-            currentConn.setTransport(transportPath(method), [{ wisp: wispUrl }]),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('Timed out after 10s — transport module may have failed to load or initialize (check the file is valid JS, not an HTML page)')), 10000))
-          ])
-          currentTransport = method
-          saveTransportChoice(method)
-          setTransportUI(method)
-          await verifyActiveTransport()
-          transportSaveBtn.textContent = 'Save'
-          wispToast.textContent = 'transport method set!'
-          wispToast.style.background = ''
-          showToast()
+          const Transport = transportConstructor(method);
+          await controller.setTransport(new Transport({ wisp: wispInput.value || getSavedWisp() }));
+          currentTransport = method;
+          saveTransportChoice(method);
+          setTransportUI(method);
+          await verifyActiveTransport();
+          wispToast.textContent = 'Transport method set!';
+          showToast();
         } catch (err) {
-          transportSaveBtn.textContent = 'Failed!'
-          wispToast.textContent = 'Error: ' + err.message
-          wispToast.style.background = '#ff6b6b'
-          showToast()
-          setTimeout(() => {
-            wispToast.textContent = 'wisp server set!'
-            wispToast.style.background = ''
-          }, 4200)
-          console.error('[Scramjet STATIC] Transport switch failed:', err)
-          setTimeout(() => { transportSaveBtn.textContent = originalText }, 2000)
+          wispToast.textContent = 'Error: ' + err.message;
+          wispToast.style.background = '#ff6b6b';
+          showToast();
+          console.error('[Scramjet 2.x] Transport switch failed:', err);
         } finally {
-          transportSaveBtn.disabled = false
-          transportResetBtn.disabled = false
+          transportSaveBtn.disabled = false;
+          transportResetBtn.disabled = false;
         }
       }
 
